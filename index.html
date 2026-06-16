@@ -19,6 +19,8 @@
   --f:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
 }
 html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);overflow:hidden;font-size:15px;-webkit-font-smoothing:antialiased}
+body.client-mode,body.client-mode html{overflow:auto!important;height:auto!important}
+body.client-mode #root{height:auto!important;overflow:visible!important;display:block!important}
 #root{height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
 /* PIN */
@@ -145,7 +147,7 @@ html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);
 .sec-col-hdr{display:flex;padding:4px 0 6px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
 
 /* EXERCISE ROW */
-.ex-row{display:flex;align-items:center;background:var(--s2);border-radius:var(--rsm);margin-bottom:6px;overflow:hidden}
+.ex-row{display:flex;align-items:center;background:var(--s2);border-radius:var(--rsm);margin-bottom:6px;position:relative}
 .ex-name-wrap{flex:2;min-width:0;position:relative}
 .ex-ni{width:100%;font-size:14px;color:var(--t1);background:transparent;border:none;padding:11px 14px;font-family:var(--f);outline:none}
 .ex-ni::placeholder{color:var(--t3)}
@@ -207,15 +209,15 @@ html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);
 .sum-card:hover{background:var(--s2)}
 
 /* CLIENT VIEW */
-.cv-root{background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
-.cv-topbar{background:var(--acc);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0;position:sticky;top:0;z-index:100}
+.cv-root{background:var(--bg);position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cv-topbar{background:var(--acc);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
 .cv-logo{font-size:16px;font-weight:700;letter-spacing:-.3px;color:#fff}
 .cv-logo em{color:rgba(255,255,255,.7);font-style:normal}
 .cv-sync{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.7)}
 .cv-sync-dot{width:6px;height:6px;border-radius:50%;background:#fff}
 .cv-sync-dot.pulse{animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.cv-body{flex:1;overflow-y:auto;padding:0}
+.cv-body{padding-top:56px}
 .cv-hero{background:#fff;border-bottom:1px solid var(--sep);padding:24px 24px 20px}
 .cv-athlete-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
 .cv-name{font-size:22px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
@@ -257,12 +259,12 @@ html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);
 <body>
 <div id="root"></div>
 <script>
-const ST=['Warm Up','Core','Strength','Conditioning','Cardio','Mobility','AMRAP','EMOM','Hyrox','For Time','Corsa','Stretching'];
+const ST=['Warm Up','Core','Power','Strength','Conditioning','Cardio','Mobility','AMRAP','EMOM','Hyrox','For Time','Corsa','Stretching'];
 const SP={functional:'Functional Training',hyrox:'Hyrox',corsa:'Corsa / Endurance',forza:'Forza / Powerlifting',mobility:'Mobility',crossfit:'CrossFit',altro:'Altro'};
 const SI={functional:'⚡',hyrox:'🏁',corsa:'🏃',forza:'💪',mobility:'🧘',crossfit:'🔥',altro:'🎯'};
 const AVB=['#1a2e1a','#0f1a2e','#2e1a1a','#2e1e0a','#1a0f2e','#0f2e26'];
 const AVT=['#c8f135','#4a9eff','#ff6b6b','#ff9f0a','#b388ff','#4dd0a0'];
-const PIN='0855',SK='bpt_v1',CLIENT_BASE='https://dapper-cendol-7fdab5.netlify.app';
+const PIN='0855',SK='bpt_v1',CLIENT_BASE='https://balza00.github.io/training-builder';
 const SB_URL='https://ofbkfmoxuppbxdsjkkus.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mYmtmbW94dXBwYnhkc2pra3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTQzMzIsImV4cCI6MjA5NjY5MDMzMn0.3wq8AleqlA5moKBQ3LS5poGl89mhN4crulUvRfOfEas';
 
@@ -510,7 +512,7 @@ function programmaTab(client){
     const cp=document.createElement('button');cp.className='pill-del';cp.title='Duplica';cp.textContent='⎘';cp.style.fontSize='12px';
     cp.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const cl=cloneWk(lc.weeks[i]);cl.label='Sett. '+(lc.weeks.length+1);upC({weeks:[...lc.weeks,cl],activeWeek:lc.weeks.length,activeDay:0});};
     p.appendChild(cp);
-    if(client.weeks.length>1){const dl=document.createElement('button');dl.className='pill-del';dl.textContent='×';dl.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const wks=[...lc.weeks];wks.splice(i,1);upC({weeks:wks,activeWeek:Math.min(lc.activeWeek||0,wks.length-1)});};p.appendChild(dl);}
+    if(client.weeks.length>1){const dl=document.createElement('button');dl.className='pill-del';dl.textContent='×';dl.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const wks=[...lc.weeks];wks.splice(i,1);const renumbered=wks.map((w,j)=>w.label.match(/^Sett\. \d+$/)?{...w,label:'Sett. '+(j+1)}:w);upC({weeks:renumbered,activeWeek:Math.min(lc.activeWeek||0,renumbered.length-1)});};p.appendChild(dl);}
     wr.appendChild(p);
   });
   const aw=document.createElement('button');aw.className='pill pill-add';aw.textContent='+ Settimana';
@@ -538,9 +540,15 @@ function programmaTab(client){
 
 function buildSec(client,week,day,sec,si){
   const key=week.id+'-'+day.id+'-'+sec.id;const col=S.collapsed[key];const isRun=sec.type==='Corsa';
-  const bl=document.createElement('div');bl.className='sec-block';
+  const bl=document.createElement('div');bl.className='sec-block';bl.draggable=true;bl.dataset.si=si;
+  bl.addEventListener('dragstart',e=>{e.dataTransfer.setData('secIdx',si);e.dataTransfer.effectAllowed='move';setTimeout(()=>bl.style.opacity='.4',0);});
+  bl.addEventListener('dragend',()=>bl.style.opacity='');
+  bl.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';bl.style.outline='2px solid var(--acc)';});
+  bl.addEventListener('dragleave',()=>bl.style.outline='');
+  bl.addEventListener('drop',e=>{e.preventDefault();bl.style.outline='';const from=+e.dataTransfer.getData('secIdx');const to=si;if(from===to)return;const ld=getDay(client.id);if(!ld)return;const secs=[...ld.sections];const[moved]=secs.splice(from,1);secs.splice(to,0,moved);udDayR(client.id,{sections:secs});});
   const hd=document.createElement('div');hd.className='sec-head';
   hd.innerHTML=`<div class="sec-title-row">
+    <span style="color:var(--t3);cursor:grab;font-size:13px;padding-right:4px" title="Trascina per riordinare">⠿</span>
     <span class="sec-chev${col?'':' open'}">▶</span>
     <span style="color:var(--acc);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em">${sec.type}</span>
     <select style="background:transparent;border:none;color:var(--t3);font-size:11px;font-family:inherit;font-weight:700;cursor:pointer;outline:none;-webkit-appearance:none;padding:2px 8px;border-radius:20px" onclick="event.stopPropagation()">
@@ -559,7 +567,12 @@ function buildSec(client,week,day,sec,si){
     body.appendChild(hdr);
     const libSet=libNames();
     sec.exercises.forEach((ex,ei)=>{
-      const row=document.createElement('div');row.className='ex-row';
+      const row=document.createElement('div');row.className='ex-row';row.draggable=true;row.dataset.ei=ei;
+      row.addEventListener('dragstart',e=>{e.dataTransfer.setData('exIdx',ei);e.dataTransfer.setData('secIdx',si);e.dataTransfer.effectAllowed='move';setTimeout(()=>row.style.opacity='.4',0);});
+      row.addEventListener('dragend',()=>row.style.opacity='');
+      row.addEventListener('dragover',e=>{e.preventDefault();row.style.outline='2px solid var(--acc)';});
+      row.addEventListener('dragleave',()=>row.style.outline='');
+      row.addEventListener('drop',e=>{e.preventDefault();row.style.outline='';const fromSec=+e.dataTransfer.getData('secIdx');const from=+e.dataTransfer.getData('exIdx');const to=ei;if(fromSec!==si||from===to)return;const ld=getDay(client.id);if(!ld)return;const ls=ld.sections[si];if(!ls)return;const exs=[...ls.exercises];const[moved]=exs.splice(from,1);exs.splice(to,0,moved);udDayR(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,exercises:exs}:s)});});
       if(isRun){
         row.innerHTML=`<div class="ex-name-wrap" style="flex:2"><input class="ex-ni" placeholder="Es. Corsa facile" value="${esc(ex.name)}" data-f="name"></div>
           <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Km</div><input class="ex-ci" value="${esc(ex.km)}" placeholder="10" data-f="km"></div>
@@ -591,7 +604,7 @@ function buildSec(client,week,day,sec,si){
           nw.appendChild(acl);
         };
         ni.addEventListener('input',e=>showAc(e.target.value));
-        ni.addEventListener('focus',e=>{if(e.target.value)showAc(e.target.value)});
+        ni.addEventListener('focus',e=>{if(e.target.value.trim())showAc(e.target.value)});
         ni.addEventListener('blur',()=>setTimeout(()=>{
           if(acl){acl.remove();acl=null;}
           const name=ni.value.trim();
@@ -719,6 +732,10 @@ function portfolioPage(){
 }
 
 function cvRoot(shareId){
+  document.documentElement.style.overflow='auto';
+  document.documentElement.style.height='auto';
+  document.body.style.overflow='auto';
+  document.body.style.height='auto';
   const wrap=document.createElement('div');wrap.className='cv-root';
   wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:14px;color:var(--t2)">
     <div style="font-size:28px;font-weight:700;letter-spacing:-.3px">Balza<em style="color:var(--acc);font-style:normal">PT</em></div>
@@ -791,10 +808,19 @@ function buildCV(wrap,client,shareId,initW){
       const newHash=JSON.stringify(fresh);
       if(newHash!==lastHash){
         lastHash=newHash;Object.assign(client,fresh);
-        setSync('update');rb();
+        setSync('update');
+        const focused=document.activeElement;
+        const userTyping=focused&&(focused.tagName==='INPUT'||focused.tagName==='TEXTAREA');
+        if(!userTyping){rb();}else{
+          const banner=document.createElement('div');
+          banner.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.15)';
+          banner.textContent='Scheda aggiornata — tocca per ricaricare';
+          banner.onclick=()=>{banner.remove();rb();};
+          document.body.appendChild(banner);
+        }
         setTimeout(()=>setSync('live'),2500);
       }
-    }catch(e){/* silent — non mostrare errori di rete al cliente */}
+    }catch(e){/* silent */}
   },30000);
   window.addEventListener('pagehide',()=>clearInterval(poll));
 
