@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BalzaPT">
+<meta name="theme-color" content="#f2f2f7">
+<title>BalzaPT</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f2f7;--s1:#fff;--s2:#f2f2f7;--s3:#e5e5ea;
+  --t1:#000;--t2:rgba(60,60,67,.6);--t3:rgba(60,60,67,.3);
+  --sep:rgba(60,60,67,.18);
+  --acc:#1db954;--blue:#007aff;--red:#ff3b30;--orange:#ff9500;--green:#34c759;
+  --r:14px;--rsm:10px;--rxs:7px;
+  --sb:256px;
+  --f:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:var(--f);overflow:hidden;font-size:15px;-webkit-font-smoothing:antialiased}
+#root{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* PIN */
+.pin-screen{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg)}
+.pin-logo{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:8px}
+.pin-logo em{color:var(--acc);font-style:normal}
+.pin-sub{font-size:14px;color:var(--t2);margin-bottom:40px}
+.pin-dots{display:flex;gap:16px;margin-bottom:40px}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:var(--s3);transition:all .15s}
+.pin-dot.on{background:var(--acc);transform:scale(1.1)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:252px}
+.pin-k{height:72px;border-radius:var(--r);background:var(--s1);border:none;cursor:pointer;font-size:24px;font-weight:500;color:var(--t1);font-family:var(--f);transition:all .1s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;-webkit-tap-highlight-color:transparent;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.pin-k:active{background:var(--s3);transform:scale(.94)}
+.pin-k.ghost{background:transparent;cursor:default;pointer-events:none;box-shadow:none}
+.pin-k.del{font-size:20px;color:var(--t2)}
+.pin-ks{font-size:9px;letter-spacing:.1em;color:var(--t3);font-weight:600;text-transform:uppercase}
+.pin-err{color:var(--red);font-size:13px;margin-top:16px;min-height:20px;font-weight:500}
+.pin-link{margin-top:28px;background:transparent;border:none;color:var(--t2);font-size:13px;cursor:pointer;font-family:var(--f);padding:8px 16px}
+.pin-link:hover{color:var(--t1)}
+.code-big{font-size:48px;font-weight:800;letter-spacing:8px;color:var(--acc);font-variant-numeric:tabular-nums;margin-bottom:28px;min-height:58px}
+
+/* SHELL */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:var(--sb);flex-shrink:0;background:#fff;display:flex;flex-direction:column;height:100vh;overflow:hidden;border-right:1px solid var(--sep)}
+.sb-hd{padding:20px 16px 12px;flex-shrink:0}
+.sb-logo{font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:14px}
+.sb-logo em{color:var(--acc);font-style:normal}
+.sb-sw{position:relative}
+.sb-si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none}
+.sb-sinp{width:100%;padding:7px 10px 7px 28px;background:var(--s2);border:none;border-radius:var(--rsm);font-size:13px;color:var(--t1);font-family:var(--f);outline:none}
+.sb-sinp::placeholder{color:var(--t3)}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 8px 0}
+.sb-nav::-webkit-scrollbar{display:none}
+.sb-lbl{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.04em;padding:10px 8px 4px;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rsm);cursor:pointer;border:none;background:transparent;width:100%;text-align:left;color:var(--t2);font-family:var(--f);font-size:13px;font-weight:500;transition:all .12s}
+.sb-item:hover{background:rgba(0,0,0,.05);color:var(--t1)}
+.sb-item.active{background:rgba(0,0,0,.08);color:var(--t1)}
+.sb-ico{width:28px;height:28px;border-radius:var(--rxs);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(0,0,0,.05)}
+.sb-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800}
+.sb-ft{padding:12px 8px;flex-shrink:0;border-top:1px solid var(--sep)}
+.sb-add{width:100%;padding:10px;border-radius:var(--rsm);background:var(--acc);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s}
+.sb-add:hover{opacity:.9}
+.sb-add:active{transform:scale(.97)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{flex-shrink:0;padding:28px 32px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.tb-title{font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.tb-sub{font-size:13px;color:var(--t2);margin-top:4px}
+.tb-actions{display:flex;align-items:center;gap:8px;padding-top:4px}
+.content{flex:1;overflow-y:auto;padding:24px 32px 40px}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rsm);border:none;cursor:pointer;font-family:var(--f);font-size:13px;font-weight:600;transition:all .12s;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn-acc{background:var(--acc);color:#fff}
+.btn-acc:hover{opacity:.9}
+.btn-fill{background:var(--s1);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.btn-fill:hover{background:var(--s3)}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--sep)}
+.btn-ghost:hover{background:var(--s1);color:var(--t1)}
+.btn-danger{background:transparent;color:var(--red);border:none}
+.btn-danger:hover{background:rgba(255,59,48,.08)}
+.btn-ico{width:32px;height:32px;padding:0;border-radius:var(--rxs);justify-content:center;background:transparent;color:var(--t3);border:none;font-size:15px;display:inline-flex;align-items:center;cursor:pointer}
+.btn-ico:hover{background:var(--s2);color:var(--t1)}
+
+/* CARDS */
+.card{background:var(--s1);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.stat{background:var(--s1);border-radius:var(--r);padding:16px 20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.stat-val{font-size:30px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.stat-lbl{font-size:12px;color:var(--t2);margin-top:6px;font-weight:500}
+
+/* TABLE */
+.ctable{width:100%;border-collapse:collapse}
+.ctable th{text-align:left;padding:9px 14px;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--sep)}
+.ctable td{padding:13px 14px;border-bottom:1px solid rgba(60,60,67,.1);vertical-align:middle}
+.ctable tr:last-child td{border-bottom:none}
+.ctable tbody tr{cursor:pointer;transition:background .1s}
+.ctable tbody tr:hover td{background:rgba(0,0,0,.02)}
+.av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12px;font-weight:600;color:var(--t2);letter-spacing:.02em}
+.field input,.field select,.field textarea{font-family:var(--f);font-size:14px;border:1.5px solid var(--sep);border-radius:var(--rsm);padding:9px 12px;background:var(--s1);color:var(--t1);outline:none;transition:border-color .15s;width:100%;-webkit-appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23636366' d='M5 6L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--acc);outline:none}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5}
+
+/* TABS */
+.tabs{display:flex;background:var(--s2);border-radius:var(--rsm);padding:3px;margin-bottom:24px;width:fit-content}
+.tab-btn{padding:7px 18px;border-radius:var(--rxs);border:none;background:transparent;cursor:pointer;font-family:var(--f);font-size:13px;font-weight:500;color:var(--t2);transition:all .15s}
+.tab-btn.active{background:var(--s1);color:var(--t1);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* PILLS */
+.pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.pill{padding:6px 14px;border-radius:20px;border:1.5px solid var(--sep);background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);font-family:var(--f);display:flex;align-items:center;gap:6px;transition:all .12s;white-space:nowrap}
+.pill.active{background:var(--acc);color:#fff;border-color:transparent;font-weight:600}
+.pill:hover:not(.active){background:var(--s1);color:var(--t1)}
+.pill-add{border-style:dashed;color:var(--t3)}
+.pill-del{background:transparent;border:none;cursor:pointer;color:inherit;font-size:14px;padding:0;font-family:var(--f);line-height:1;opacity:.5;margin-left:2px}
+.pill-del:hover{opacity:1}
+.day-pills{display:flex;gap:8px;padding-top:2px}
+.dp{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--sep);background:transparent;cursor:pointer;font-size:14px;font-weight:600;color:var(--t2);font-family:var(--f);transition:all .12px}
+.dp.active{background:var(--acc);color:#fff;border-color:transparent}
+.dp:hover:not(.active){background:var(--s1);color:var(--t1)}
+
+/* SECTION */
+.sec-block{border-radius:var(--r);margin-bottom:8px;overflow:hidden;background:var(--s1);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;transition:background .1s}
+.sec-head:hover{background:rgba(0,0,0,.03)}
+.sec-title-row{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+.sec-chev{font-size:11px;color:var(--t3);transition:transform .2s;display:inline-block}
+.sec-chev.open{transform:rotate(90deg)}
+.sec-body{padding:0 14px 14px}
+.sec-col-hdr{display:flex;padding:4px 0 6px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em}
+
+/* EXERCISE ROW */
+.ex-row{display:flex;align-items:center;background:var(--s2);border-radius:var(--rsm);margin-bottom:6px;overflow:hidden}
+.ex-name-wrap{flex:2;min-width:0;position:relative}
+.ex-ni{width:100%;font-size:14px;color:var(--t1);background:transparent;border:none;padding:11px 14px;font-family:var(--f);outline:none}
+.ex-ni::placeholder{color:var(--t3)}
+.ex-div{width:1px;height:22px;background:var(--sep);flex-shrink:0}
+.ex-cell{display:flex;flex-direction:column;padding:7px 12px;flex:1;min-width:0}
+.ex-clbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.ex-ci{font-size:13px;color:var(--t1);background:transparent;border:none;font-family:var(--f);outline:none;width:100%}
+.ex-ci::placeholder{color:var(--t3)}
+.ex-del{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;color:var(--t3);font-size:15px;flex-shrink:0;margin-right:4px;border-radius:var(--rxs);transition:all .1s}
+.ex-del:hover{color:var(--red);background:rgba(255,59,48,.1)}
+.add-ex-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--rsm);border:1.5px dashed var(--sep);background:transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--t3);font-family:var(--f);margin-top:8px;width:100%;transition:all .12s}
+.add-ex-btn:hover{border-color:var(--t2);color:var(--t2)}
+.sec-notes-inp{width:100%;background:transparent;border:none;border-top:1px solid var(--sep);color:var(--t2);font-size:12px;padding:10px 0 2px;font-family:var(--f);margin-top:10px;outline:none;line-height:1.5}
+.sec-notes-inp::placeholder{color:var(--t3)}
+.add-sec-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.add-sec-chip{padding:6px 13px;border-radius:20px;border:1.5px dashed var(--sep);background:transparent;cursor:pointer;font-size:11px;font-weight:600;color:var(--t3);font-family:var(--f);white-space:nowrap;transition:all .12s}
+.add-sec-chip:hover{border-style:solid;color:var(--t2)}
+
+/* AUTOCOMPLETE */
+.ac-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border-radius:var(--rsm);z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,.15);border:1px solid var(--sep)}
+.ac-list::-webkit-scrollbar{display:none}
+.ac-item{padding:10px 14px;font-size:13px;color:var(--t1);cursor:pointer;border-bottom:1px solid rgba(60,60,67,.1);transition:background .1s;display:flex;align-items:center;gap:8px}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover{background:var(--s2)}
+.ac-item strong{color:var(--acc)}
+.ac-lib-badge{font-size:10px;font-weight:700;color:var(--acc);background:rgba(29,185,84,.1);padding:2px 6px;border-radius:10px;flex-shrink:0}
+
+/* FEEDBACK */
+.fb-item{padding:16px 0;border-bottom:1px solid var(--sep)}
+.fb-item:last-child{border-bottom:none}
+.star-btn{background:transparent;border:none;cursor:pointer;font-size:26px;padding:0 2px;transition:transform .1s;color:var(--t3)}
+.star-btn:active{transform:scale(.85)}
+
+/* EMPTY */
+.empty{text-align:center;padding:80px 24px;color:var(--t3)}
+.empty-icon{font-size:52px;margin-bottom:16px}
+.empty-title{font-size:17px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.empty-sub{font-size:14px;line-height:1.5}
+
+/* MISC */
+.divider{height:1px;background:var(--sep);margin:20px 0}
+.slbl{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.code-display{font-size:52px;font-weight:800;letter-spacing:12px;color:var(--acc);font-variant-numeric:tabular-nums;line-height:1;margin-bottom:20px}
+
+/* PORTFOLIO */
+.acc-item{background:var(--s1);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;cursor:pointer;user-select:none;transition:background .1s}
+.acc-head:hover{background:rgba(0,0,0,.03)}
+.acc-chev{font-size:11px;color:var(--t3);transition:transform .2s;display:inline-block;margin-right:12px}
+.acc-chev.open{transform:rotate(90deg)}
+.acc-count{font-size:12px;font-weight:600;color:var(--t3);background:var(--s2);padding:3px 10px;border-radius:20px}
+.acc-body{border-top:1px solid var(--sep)}
+.acc-row{padding:11px 20px;font-size:14px;color:var(--t1);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(60,60,67,.1)}
+.acc-row:last-child{border-bottom:none}
+.acc-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);flex-shrink:0}
+
+/* SUMMARY */
+.sum-card{background:var(--s1);border-radius:var(--r);padding:18px 20px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:background .12s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sum-card:hover{background:var(--s2)}
+
+/* CLIENT VIEW */
+.cv-root{background:var(--bg);min-height:100vh;display:flex;flex-direction:column}
+.cv-topbar{background:var(--acc);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0;position:sticky;top:0;z-index:100}
+.cv-logo{font-size:16px;font-weight:700;letter-spacing:-.3px;color:#fff}
+.cv-logo em{color:rgba(255,255,255,.7);font-style:normal}
+.cv-sync{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.7)}
+.cv-sync-dot{width:6px;height:6px;border-radius:50%;background:#fff}
+.cv-sync-dot.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cv-body{flex:1;overflow-y:auto;padding:0}
+.cv-hero{background:#fff;border-bottom:1px solid var(--sep);padding:24px 24px 20px}
+.cv-athlete-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.cv-name{font-size:22px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.cv-meta{font-size:13px;color:var(--t2);margin-top:2px}
+.cv-trainer-tag{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.cv-tabs{display:flex;background:var(--s2);border-radius:var(--rsm);padding:3px}
+.cv-tab{flex:1;padding:8px;border-radius:var(--rxs);border:none;background:transparent;cursor:pointer;font-family:var(--f);font-size:13px;font-weight:500;color:var(--t2);text-align:center;transition:all .15s}
+.cv-tab.active{background:var(--s1);color:var(--t1);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.cv-content{padding:20px 20px 100px;max-width:680px;margin:0 auto;width:100%}
+.cv-sel-row{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.cv-sel-row::-webkit-scrollbar{display:none}
+.cv-sel{padding:6px 14px;border-radius:20px;border:1.5px solid var(--sep);background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);font-family:var(--f);white-space:nowrap;flex-shrink:0;transition:all .12s}
+.cv-sel.active{background:var(--acc);color:#fff;border-color:transparent;font-weight:600}
+.cv-day-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin:16px 0 10px}
+.cv-sec{background:var(--s1);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.cv-sec-lbl{font-size:10px;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.12em;padding:12px 16px 10px;border-bottom:1px solid var(--sep)}
+.cv-ex{background:var(--s2);border-radius:var(--rsm);margin:8px 12px;overflow:hidden}
+.cv-ex-name{font-size:14px;font-weight:500;padding:11px 14px;color:var(--t1);border-bottom:1px solid var(--sep)}
+.cv-ex-bot{display:flex}
+.cv-ex-info{flex:1;padding:9px 14px;font-size:13px;color:var(--t2);text-align:center;border-right:1px solid var(--sep);display:flex;flex-direction:column;justify-content:center}
+.cv-ex-info-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.cv-ex-w{flex:1;display:flex;flex-direction:column;padding:0}
+.cv-ex-w-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:7px 14px 2px}
+.cv-ex-w input{width:100%;background:transparent;border:none;font-size:14px;font-weight:600;color:var(--acc);padding:2px 14px 8px;font-family:var(--f);outline:none}
+.cv-ex-w input::placeholder{color:var(--t3);font-weight:400}
+.cv-run{background:var(--s2);border-radius:var(--rsm);margin:8px 12px;overflow:hidden}
+.cv-run-name{font-size:14px;font-weight:500;padding:11px 14px;border-bottom:1px solid var(--sep)}
+.cv-run-stats{display:flex}
+.cv-run-cell{flex:1;display:flex;flex-direction:column;padding:8px 14px;border-right:1px solid var(--sep)}
+.cv-run-cell:last-child{border-right:none}
+.cv-run-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.cv-run-val{font-size:14px;font-weight:600;color:var(--t1)}
+.cv-sec-note{font-size:12px;color:var(--t3);font-style:italic;padding:10px 16px 14px;border-top:1px solid var(--sep);margin-top:4px}
+.cv-save{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:14px 40px;background:var(--acc);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--f);box-shadow:0 4px 20px rgba(29,185,84,.35);transition:all .15s;white-space:nowrap}
+.cv-save:active{transform:translateX(-50%) scale(.96)}
+.cv-fb-card{background:var(--s1);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const ST=['Warm Up','Core','Strength','Conditioning','Cardio','Mobility','AMRAP','EMOM','Hyrox','For Time','Corsa','Stretching'];
+const SP={functional:'Functional Training',hyrox:'Hyrox',corsa:'Corsa / Endurance',forza:'Forza / Powerlifting',mobility:'Mobility',crossfit:'CrossFit',altro:'Altro'};
+const SI={functional:'⚡',hyrox:'🏁',corsa:'🏃',forza:'💪',mobility:'🧘',crossfit:'🔥',altro:'🎯'};
+const AVB=['#1a2e1a','#0f1a2e','#2e1a1a','#2e1e0a','#1a0f2e','#0f2e26'];
+const AVT=['#c8f135','#4a9eff','#ff6b6b','#ff9f0a','#b388ff','#4dd0a0'];
+const PIN='0855',SK='bpt_v1',CLIENT_BASE='https://dapper-cendol-7fdab5.netlify.app';
+const SB_URL='https://ofbkfmoxuppbxdsjkkus.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mYmtmbW94dXBwYnhkc2pra3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTQzMzIsImV4cCI6MjA5NjY5MDMzMn0.3wq8AleqlA5moKBQ3LS5poGl89mhN4crulUvRfOfEas';
+
+async function sbFetch(path,opts={}){
+  try{const r=await fetch(SB_URL+'/rest/v1/'+path,{...opts,headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,...(opts.headers||{})}});if(!r.ok)return null;const t=await r.text();return t?JSON.parse(t):null;}catch(e){return null}
+}
+async function syncClient(c){if(!c)return;const d=JSON.parse(JSON.stringify(c));delete d._syncTimer;await sbFetch('balzapt_clients',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates','on-conflict':'id'},body:JSON.stringify({id:d.id,share_id:d.shareId,data:d,updated_at:new Date().toISOString()})});}
+async function getClientSupa(sid){const r=await sbFetch('balzapt_clients?share_id=eq.'+sid+'&select=data');return r?.length?r[0].data:null;}
+async function saveWts(sid,w){await sbFetch('balzapt_weights',{method:'POST',headers:{'Prefer':'resolution=merge-duplicates'},body:JSON.stringify({share_id:sid,data:w})});}
+async function getWts(sid){const r=await sbFetch('balzapt_weights?share_id=eq.'+sid+'&select=data');return r?.length?r[0].data:{};}
+async function saveFb(sid,e){await sbFetch('balzapt_feedback',{method:'POST',body:JSON.stringify({id:e.id,share_id:sid,data:e})});}
+
+const uid=()=>Math.random().toString(36).slice(2,9);
+const ini=n=>(n||'?').trim().split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2)||'?';
+const ai=n=>((n||'').charCodeAt(0)||0)%6;
+const esc=s=>(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const nEx=r=>({id:uid(),name:'',sets:'',rest:'',weight:'',km:'',pace:'',rpe:'',isRun:!!r});
+const nSec=t=>({id:uid(),type:t||'Strength',exercises:[nEx(t==='Corsa')],notes:''});
+const nDay=n=>({id:uid(),label:'Giorno '+n,focus:'',sections:[nSec('Warm Up'),nSec('Core'),nSec('Strength')]});
+const nWk=(n,nd)=>({id:uid(),label:'Sett. '+n,days:Array.from({length:nd||3},(_,i)=>nDay(i+1))});
+const nClient=()=>({id:uid(),shareId:Math.floor(100000+Math.random()*900000).toString(),name:'',surname:'',sport:'functional',trainer:'',notes:'',goals:'',numDays:3,startDate:'',weeks:[nWk(1,3)],feedback:[],activeWeek:0,activeDay:0});
+function cloneWk(w){return{...w,id:uid(),label:'',days:w.days.map(d=>({...d,id:uid(),sections:d.sections.map(s=>({...s,id:uid(),exercises:s.exercises.map(e=>({...e,id:uid(),weight:''}))}))}))}}
+
+(function(){try{if(!localStorage.getItem(SK)){const o=localStorage.getItem('tb_v5')||localStorage.getItem('tb_v4')||localStorage.getItem('tb_v3');if(o)localStorage.setItem(SK,o);}const raw=localStorage.getItem(SK);if(raw){const d=JSON.parse(raw);if(d.clients){let ch=false;d.clients.forEach(c=>{if(!c.shareId||c.shareId.length>10){c.shareId=Math.floor(100000+Math.random()*900000).toString();ch=true;}});if(ch)localStorage.setItem(SK,JSON.stringify(d));}}}catch(e){}})();
+
+function defS(){return{unlocked:false,pin:'',pinErr:'',page:'clients',clients:[],activeId:null,tab:'profile',collapsed:{},library:[]}}
+function loadS(){try{const s=localStorage.getItem(SK);if(s){const d=JSON.parse(s);return{...defS(),...d,unlocked:false,pin:'',pinErr:'',collapsed:{}}}}catch(e){}return defS();}
+function saveS(){try{localStorage.setItem(SK,JSON.stringify({page:S.page,clients:S.clients,activeId:S.activeId,tab:S.tab,library:S.library}))}catch(e){}}
+let S=loadS();
+
+const gc=()=>S.clients.find(c=>c.id===S.activeId);
+const getC=id=>S.clients.find(c=>c.id===id);
+function getDay(cid){const c=getC(cid);if(!c)return null;return c.weeks[c.activeWeek||0]?.days[c.activeDay||0]||null}
+function set(p){Object.assign(S,p);saveS();R()}
+function upC(p){S.clients=S.clients.map(c=>c.id===S.activeId?{...c,...p}:c);saveS();const c=gc();if(c)syncClient(c).catch(()=>{});R();}
+function upCS(p){S.clients=S.clients.map(c=>c.id===S.activeId?{...c,...p}:c);saveS();const c=gc();if(c)syncClient(c).catch(()=>{});}
+function udDay(cid,patch){const c=getC(cid);if(!c)return;const wi=c.activeWeek||0,di=c.activeDay||0;c.weeks=c.weeks.map((w,i)=>i!==wi?w:{...w,days:w.days.map((d,j)=>j!==di?d:{...d,...patch})});saveS();}
+function udDayR(cid,patch){udDay(cid,patch);const c=getC(cid);if(c)syncClient(c).catch(()=>{});R();}
+const allEx=()=>{const s=new Set();(S.library||[]).forEach(e=>s.add(e.name));S.clients.forEach(c=>(c.weeks||[]).forEach(w=>(w.days||[]).forEach(d=>(d.sections||[]).forEach(sec=>sec.exercises.forEach(e=>{if(e.name?.trim())s.add(e.name.trim())})))));return[...s].sort();};
+const libNames=()=>new Set((S.library||[]).map(e=>e.name));
+
+function getRoute(){const h=location.hash;if(h.startsWith('#/c/'))return{type:'client',shareId:h.slice(4)};const p=new URLSearchParams(location.search);if(p.get('code'))return{type:'client',shareId:p.get('code')};return{type:'trainer'};}
+window.addEventListener('hashchange',R);
+
+function R(){
+  const route=getRoute();const root=document.getElementById('root');
+  const prev=root.querySelector('.content');const sy=prev?.scrollTop||0;
+  root.innerHTML='';
+  if(route.type==='client'){root.style.cssText='height:auto;min-height:100vh;overflow:auto';root.appendChild(cvRoot(route.shareId));return;}
+  root.style.cssText='';
+  if(!S.unlocked){if(S.clientMode)root.appendChild(clientCodeScreen());else root.appendChild(pinScreen());return;}
+  root.appendChild(appShell());
+  const nc=root.querySelector('.content');if(nc&&sy)nc.scrollTop=sy;
+}
+
+function pinScreen(){
+  const d=document.createElement('div');d.className='pin-screen';
+  function build(){
+    d.innerHTML=`<div class="pin-logo">Balza<em>PT</em></div>
+    <div class="pin-sub">Training Management</div>
+    <div class="pin-dots">${[0,1,2,3].map(i=>`<div class="pin-dot${i<S.pin.length?' on':''}"></div>`).join('')}</div>
+    <div class="pin-pad">${[{k:'1',s:''},{k:'2',s:'ABC'},{k:'3',s:'DEF'},{k:'4',s:'GHI'},{k:'5',s:'JKL'},{k:'6',s:'MNO'},{k:'7',s:'PQRS'},{k:'8',s:'TUV'},{k:'9',s:'WXYZ'},{k:'ghost',s:''},{k:'0',s:''},{k:'del',s:''}].map(({k,s})=>`<button class="pin-k${k==='ghost'?' ghost':k==='del'?' del':''}" data-k="${k}">${k==='ghost'?'':k==='del'?'⌫':`<span>${k}</span>${s?`<span class="pin-ks">${s}</span>`:''}`}</button>`).join('')}</div>
+    <div class="pin-err">${S.pinErr}</div>
+    <button class="pin-link" id="toC">Sei un cliente? Accedi qui →</button>`;
+    d.querySelectorAll('.pin-k:not(.ghost)').forEach(b=>{b.onclick=()=>{const k=b.dataset.k;if(k==='del'){S.pin=S.pin.slice(0,-1);S.pinErr='';build();return}if(S.pin.length>=4)return;S.pin+=k;if(S.pin.length===4){if(S.pin===PIN)set({unlocked:true,pin:'',pinErr:''});else{Object.assign(S,{pin:'',pinErr:'Codice errato'});build();}}else build();};});
+    d.querySelector('#toC').onclick=()=>set({clientMode:true});
+  }
+  build();return d;
+}
+
+function clientCodeScreen(){
+  const d=document.createElement('div');d.className='pin-screen';
+  let code='',err='';
+  function build(){
+    d.innerHTML=`<div class="pin-logo">Balza<em>PT</em></div>
+    <div class="pin-sub">Inserisci il tuo codice cliente</div>
+    <div class="code-big">${code.padEnd(6,'·')}</div>
+    <div class="pin-pad">${[1,2,3,4,5,6,7,8,9,'ghost',0,'del'].map(k=>`<button class="pin-k${k==='ghost'?' ghost':k==='del'?' del':''}" data-k="${k}">${k==='ghost'?'':k==='del'?'⌫':k}</button>`).join('')}</div>
+    <div class="pin-err">${err}</div>
+    <button class="pin-link" id="toT">← Sei il trainer? Accedi qui</button>`;
+    d.querySelectorAll('.pin-k:not(.ghost)').forEach(b=>{b.onclick=()=>{const k=b.dataset.k;if(k==='del'){code=code.slice(0,-1);err='';build();return}if(code.length>=6)return;code+=k;if(code.length===6){if(S.clients.find(c=>c.shareId===code)){location.hash='#/c/'+code;}else{err='Codice non trovato';code='';build();}}else build();};});
+    d.querySelector('#toT').onclick=()=>set({clientMode:false});
+  }
+  build();return d;
+}
+
+function appShell(){
+  const w=document.createElement('div');w.className='shell';
+  w.appendChild(buildSB());
+  const m=document.createElement('div');m.className='main';
+  if(S.page==='summary')m.appendChild(summaryPage());
+  else if(S.page==='portfolio')m.appendChild(portfolioPage());
+  else if(S.activeId)m.appendChild(clientDetail());
+  else m.appendChild(clientsPage());
+  w.appendChild(m);return w;
+}
+
+function buildSB(){
+  const sb=document.createElement('div');sb.className='sb';
+  const NAV={
+    clients:`<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="5.5" cy="4.5" r="2.3" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.485 2.015-4.5 4.5-4.5S10 10.515 10 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="11" cy="5" r="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M13 13c0-1.8-1.2-3.3-2.8-3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`,
+    summary:`<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="9.5" width="3" height="4" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="6" y="6" width="3" height="7.5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="11" y="2.5" width="3" height="11" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>`,
+    portfolio:`<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="2" y="1.5" width="9" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M4.5 5h6M4.5 7.5h6M4.5 10h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`
+  };
+  sb.innerHTML=`<div class="sb-hd"><div class="sb-logo">Balza<em>PT</em></div><div class="sb-sw"><span class="sb-si">⌕</span><input class="sb-sinp" placeholder="Cerca atleta..." id="sbS"></div></div>`;
+  const nav=document.createElement('div');nav.className='sb-nav';
+  const ml=document.createElement('div');ml.className='sb-lbl';ml.textContent='Menu';nav.appendChild(ml);
+  [{id:'clients',ico:'clients',lbl:'Clienti'},{id:'summary',ico:'summary',lbl:'Riepilogo'},{id:'portfolio',ico:'portfolio',lbl:'Portfolio'}].forEach(it=>{
+    const act=(S.page===it.id||(!S.activeId&&it.id==='clients'))&&!S.activeId;
+    const b=document.createElement('button');b.className='sb-item'+(act?' active':'');
+    b.innerHTML=`<span class="sb-ico">${NAV[it.ico]}</span><span>${it.lbl}</span>`;
+    b.onclick=()=>set({page:it.id,activeId:null});nav.appendChild(b);
+  });
+  if(S.clients.length){
+    const cl=document.createElement('div');cl.className='sb-lbl';cl.style.marginTop='8px';cl.textContent='Atleti';nav.appendChild(cl);
+    S.clients.forEach(c=>{
+      const idx=ai(c.name);const fn=((c.name||'')+(c.surname?' '+c.surname:'')).trim()||'Senza nome';
+      const b=document.createElement('button');b.className='sb-item'+(S.activeId===c.id?' active':'');b.dataset.client=fn;
+      b.innerHTML=`<span class="sb-av" style="background:${AVB[idx]};color:${AVT[idx]}">${ini(fn)}</span><span>${fn}</span>`;
+      b.onclick=()=>set({page:'client',activeId:c.id,tab:'profile'});nav.appendChild(b);
+    });
+  }
+  sb.appendChild(nav);
+  const ft=document.createElement('div');ft.className='sb-ft';
+  const ab=document.createElement('button');ab.className='sb-add';ab.textContent='+ Nuovo cliente';
+  ab.onclick=()=>{const nc=nClient();S.clients.push(nc);set({page:'client',activeId:nc.id,tab:'profile'})};
+  ft.appendChild(ab);sb.appendChild(ft);
+  setTimeout(()=>{const inp=document.getElementById('sbS');if(!inp)return;inp.addEventListener('input',e=>{const q=e.target.value.toLowerCase();nav.querySelectorAll('[data-client]').forEach(b=>{b.style.display=b.dataset.client.toLowerCase().includes(q)?'':'none';});});},0);
+  return sb;
+}
+
+function clientsPage(){
+  const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;height:100%';
+  const tb=document.createElement('div');tb.className='topbar';
+  tb.innerHTML=`<div><div class="tb-title">Clienti</div><div class="tb-sub">${S.clients.length} atleti registrati</div></div>`;
+  const ab=document.createElement('button');ab.className='btn btn-acc';ab.textContent='+ Nuovo cliente';
+  ab.onclick=()=>{const nc=nClient();S.clients.push(nc);set({page:'client',activeId:nc.id,tab:'profile'})};
+  const tbr=document.createElement('div');tbr.className='tb-actions';tbr.appendChild(ab);tb.appendChild(tbr);d.appendChild(tb);
+  const cont=document.createElement('div');cont.className='content';
+  if(!S.clients.length){
+    cont.innerHTML=`<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">Nessun cliente ancora</div><div class="empty-sub">Aggiungi il tuo primo atleta per iniziare</div></div>`;
+  } else {
+    const sg=document.createElement('div');sg.className='stats-grid';
+    sg.innerHTML=`<div class="stat"><div class="stat-val">${S.clients.length}</div><div class="stat-lbl">Clienti attivi</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--acc)">${S.clients.reduce((a,c)=>a+(c.weeks?.length||0),0)}</div><div class="stat-lbl">Settimane totali</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--green)">${S.clients.reduce((a,c)=>a+(c.feedback?.length||0),0)}</div><div class="stat-lbl">Feedback ricevuti</div></div>`;
+    cont.appendChild(sg);
+    const card=document.createElement('div');card.className='card';card.style.cssText='padding:0;overflow:hidden';
+    const t=document.createElement('table');t.className='ctable';
+    t.innerHTML=`<thead><tr><th style="padding-left:20px">Atleta</th><th>Disciplina</th><th>Inizio</th><th>Giorni</th><th>Settimane</th></tr></thead>`;
+    const tb2=document.createElement('tbody');
+    S.clients.forEach(c=>{
+      const idx=ai(c.name);const fn=((c.name||'')+(c.surname?' '+c.surname:'')).trim()||'Senza nome';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td style="padding-left:20px"><div style="display:flex;align-items:center;gap:10px"><div class="av" style="background:${AVB[idx]};color:${AVT[idx]}">${ini(fn)}</div><span style="font-weight:600">${fn}</span></div></td>
+        <td style="color:var(--t2)">${SI[c.sport]||''} ${SP[c.sport]||'—'}</td><td style="color:var(--t2)">${c.startDate||'—'}</td>
+        <td style="color:var(--t2)">${c.numDays||3} gg</td><td style="color:var(--t2)">${c.weeks?.length||1}</td>`;
+      tr.onclick=()=>set({page:'client',activeId:c.id,tab:'profile'});tb2.appendChild(tr);
+    });
+    t.appendChild(tb2);card.appendChild(t);cont.appendChild(card);
+  }
+  d.appendChild(cont);return d;
+}
+
+function clientDetail(){
+  const client=gc();if(!client){set({page:'clients',activeId:null});return document.createElement('div')}
+  const idx=ai(client.name);const fn=((client.name||'')+(client.surname?' '+client.surname:'')).trim()||'Nuovo cliente';
+  const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;height:100%';
+  const tb=document.createElement('div');tb.className='topbar';
+  tb.innerHTML=`<div style="display:flex;align-items:center;gap:14px">
+    <div class="av" style="width:44px;height:44px;font-size:15px;font-weight:800;background:${AVB[idx]};color:${AVT[idx]};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ini(fn)}</div>
+    <div><div class="tb-title" style="font-size:22px">${fn}</div><div class="tb-sub">${SI[client.sport]||''} ${SP[client.sport]||''}</div></div></div>`;
+  const bk=document.createElement('button');bk.className='btn btn-ghost';bk.textContent='← Clienti';bk.onclick=()=>set({page:'clients',activeId:null});
+  const tbr=document.createElement('div');tbr.className='tb-actions';tbr.appendChild(bk);tb.appendChild(tbr);d.appendChild(tb);
+  const tw=document.createElement('div');tw.style.cssText='padding:16px 32px 0;flex-shrink:0';
+  const tabs=document.createElement('div');tabs.className='tabs';
+  [{id:'profile',lbl:'Profilo'},{id:'programma',lbl:'Programma'},{id:'feedback',lbl:'Feedback'}].forEach(t=>{
+    const b=document.createElement('button');b.className='tab-btn'+(S.tab===t.id?' active':'');b.textContent=t.lbl;b.onclick=()=>set({tab:t.id});tabs.appendChild(b);
+  });
+  tw.appendChild(tabs);d.appendChild(tw);
+  const cont=document.createElement('div');cont.className='content';
+  if(S.tab==='profile')cont.appendChild(profileTab(client));
+  else if(S.tab==='programma')cont.appendChild(programmaTab(client));
+  else cont.appendChild(feedbackTab(client));
+  d.appendChild(cont);return d;
+}
+
+function profileTab(client){
+  const d=document.createElement('div');
+  const card=document.createElement('div');card.className='card';
+  card.innerHTML=`<div style="font-size:15px;font-weight:700;margin-bottom:16px">Informazioni atleta</div>
+    <div class="form-row"><div class="field"><label>Nome</label><input id="f_name" value="${esc(client.name||'')}" placeholder="Es. Costanza"></div>
+    <div class="field"><label>Cognome</label><input id="f_surname" value="${esc(client.surname||'')}" placeholder="Es. Bianchi"></div></div>
+    <div class="form-row"><div class="field"><label>Inizio scheda</label><input id="f_sd" type="date" value="${esc(client.startDate||'')}"></div>
+    <div class="field"><label>Trainer</label><input id="f_tr" value="${esc(client.trainer||'')}" placeholder="Il tuo nome"></div></div>
+    <div class="form-row" style="margin-bottom:0">
+      <div class="field"><label>Disciplina</label><select id="f_sp">${Object.entries(SP).map(([k,v])=>`<option value="${k}"${client.sport===k?' selected':''}>${SI[k]} ${v}</option>`).join('')}</select></div>
+      <div class="field"><label>Giorni / settimana</label><div class="day-pills" style="padding-top:6px">${[1,2,3,4,5,6].map(n=>`<button class="dp${client.numDays===n?' active':''}" data-n="${n}">${n}</button>`).join('')}</div></div>
+    </div>
+    <div class="field" style="margin-top:12px"><label>Obiettivi</label><textarea id="f_gl" placeholder="Es. Perdere peso, prepararsi per Hyrox...">${esc(client.goals||'')}</textarea></div>
+    <div class="field"><label>Note</label><textarea id="f_nt" placeholder="Limitazioni fisiche, preferenze...">${esc(client.notes||'')}</textarea></div>`;
+  d.appendChild(card);
+  const b=(id,key)=>{const el=card.querySelector('#'+id);if(!el)return;el.addEventListener(el.tagName==='SELECT'?'change':'input',e=>upCS({[key]:e.target.value}))};
+  b('f_sd','startDate');b('f_tr','trainer');b('f_sp','sport');b('f_gl','goals');b('f_nt','notes');
+  ['f_name','f_surname'].forEach(id=>card.querySelector('#'+id).addEventListener('input',()=>upCS({name:card.querySelector('#f_name').value,surname:card.querySelector('#f_surname').value})));
+  card.querySelectorAll('.dp').forEach(btn=>btn.onclick=()=>{
+    const n=+btn.dataset.n;const cl=gc();
+    const weeks=cl.weeks.map(w=>{const ds=[...w.days];while(ds.length<n)ds.push(nDay(ds.length+1));return{...w,days:ds.slice(0,n)}});
+    upC({numDays:n,weeks,activeDay:0});
+  });
+  const sc=document.createElement('div');sc.className='card';
+  sc.innerHTML=`<div style="font-size:15px;font-weight:700;margin-bottom:4px">Codice cliente</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:20px">Condividi questo codice con il cliente per dargli accesso alla sua scheda</div>
+    <div class="code-display">${client.shareId}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-acc" id="cpC">Copia codice</button>
+      <button class="btn btn-fill" id="cpL">Copia link</button>
+      <button class="btn btn-fill" id="cpM">Messaggio WhatsApp</button>
+    </div>`;
+  sc.querySelector('#cpC').onclick=function(){navigator.clipboard.writeText(client.shareId).catch(()=>{});const b=this;b.textContent='✓ Copiato!';setTimeout(()=>b.textContent='Copia codice',2000);};
+  sc.querySelector('#cpL').onclick=function(){navigator.clipboard.writeText(CLIENT_BASE+'/#/c/'+client.shareId).catch(()=>{});const b=this;b.textContent='✓ Copiato!';setTimeout(()=>b.textContent='Copia link',2000);};
+  sc.querySelector('#cpM').onclick=function(){
+    const fn=((client.name||'')+(client.surname?' '+client.surname:'')).trim();
+    navigator.clipboard.writeText(`Ciao${fn?' '+fn:''}! 👋\n\nEcco il link alla tua scheda:\n${CLIENT_BASE}/#/c/${client.shareId}\n\nPuoi inserire i pesi e lasciarmi feedback direttamente dal link. 💪`).catch(()=>{});
+    const b=this;b.textContent='✓ Copiato!';setTimeout(()=>b.textContent='Messaggio WhatsApp',2000);
+  };
+  d.appendChild(sc);
+  const div=document.createElement('div');div.className='divider';d.appendChild(div);
+  const del=document.createElement('button');del.className='btn btn-danger';del.textContent='✕ Elimina cliente';
+  del.onclick=()=>{if(confirm('Eliminare questo cliente?')){S.clients=S.clients.filter(c=>c.id!==S.activeId);set({page:'clients',activeId:null})}};
+  d.appendChild(del);return d;
+}
+
+function programmaTab(client){
+  const d=document.createElement('div');
+  const wr=document.createElement('div');wr.className='pill-row';
+  (client.weeks||[]).forEach((w,i)=>{
+    const p=document.createElement('button');p.className='pill'+((client.activeWeek||0)===i?' active':'');
+    if((client.activeWeek||0)===i){
+      const inp=document.createElement('input');inp.value=w.label;inp.style.cssText='background:transparent;border:none;outline:none;font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;width:'+(Math.max(w.label.length*8,60))+'px;cursor:text';inp.onclick=e=>e.stopPropagation();
+      inp.addEventListener('input',e=>{inp.style.width=Math.max(e.target.value.length*8,60)+'px';const lc=getC(client.id);if(lc){lc.weeks[i].label=e.target.value;saveS();syncClient(lc).catch(()=>{});}});
+      p.appendChild(inp);
+    } else {const s=document.createElement('span');s.textContent=w.label;p.appendChild(s);}
+    p.onclick=e=>{if(e.target.tagName==='INPUT')return;upC({activeWeek:i,activeDay:0})};
+    const cp=document.createElement('button');cp.className='pill-del';cp.title='Duplica';cp.textContent='⎘';cp.style.fontSize='12px';
+    cp.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const cl=cloneWk(lc.weeks[i]);cl.label='Sett. '+(lc.weeks.length+1);upC({weeks:[...lc.weeks,cl],activeWeek:lc.weeks.length,activeDay:0});};
+    p.appendChild(cp);
+    if(client.weeks.length>1){const dl=document.createElement('button');dl.className='pill-del';dl.textContent='×';dl.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const wks=[...lc.weeks];wks.splice(i,1);upC({weeks:wks,activeWeek:Math.min(lc.activeWeek||0,wks.length-1)});};p.appendChild(dl);}
+    wr.appendChild(p);
+  });
+  const aw=document.createElement('button');aw.className='pill pill-add';aw.textContent='+ Settimana';
+  aw.onclick=()=>{const lc=getC(client.id);if(!lc)return;const wks=[...lc.weeks,nWk(lc.weeks.length+1,lc.numDays)];upC({weeks:wks,activeWeek:wks.length-1,activeDay:0})};
+  wr.appendChild(aw);d.appendChild(wr);
+  const week=client.weeks[client.activeWeek||0];
+  const dr=document.createElement('div');dr.className='pill-row';
+  (week.days||[]).forEach((day,i)=>{
+    const p=document.createElement('button');p.className='pill'+((client.activeDay||0)===i?' active':'');
+    p.textContent=day.label+(day.focus?' · '+day.focus:'');p.onclick=()=>upC({activeDay:i});dr.appendChild(p);
+  });
+  d.appendChild(dr);
+  const day=week.days[client.activeDay||0];
+  const dc=document.createElement('div');dc.className='card';dc.style.marginBottom='12px';
+  dc.innerHTML=`<div class="form-row"><div class="field" style="margin:0"><label>Nome giorno</label><input id="d_lbl" value="${esc(day.label)}"></div>
+    <div class="field" style="margin:0"><label>Focus</label><input id="d_foc" value="${esc(day.focus||'')}" placeholder="es. Lower Body, Hyrox Sim..."></div></div>`;
+  dc.querySelector('#d_lbl').addEventListener('input',e=>udDay(client.id,{label:e.target.value}));
+  dc.querySelector('#d_foc').addEventListener('input',e=>udDay(client.id,{focus:e.target.value}));
+  d.appendChild(dc);
+  day.sections.forEach((sec,si)=>d.appendChild(buildSec(client,week,day,sec,si)));
+  const cr=document.createElement('div');cr.className='add-sec-row';
+  ST.forEach(type=>{const b=document.createElement('button');b.className='add-sec-chip';b.textContent='+ '+type;b.onclick=()=>{const ld=getDay(client.id);if(!ld)return;udDayR(client.id,{sections:[...ld.sections,nSec(type)]})};cr.appendChild(b);});
+  d.appendChild(cr);return d;
+}
+
+function buildSec(client,week,day,sec,si){
+  const key=week.id+'-'+day.id+'-'+sec.id;const col=S.collapsed[key];const isRun=sec.type==='Corsa';
+  const bl=document.createElement('div');bl.className='sec-block';
+  const hd=document.createElement('div');hd.className='sec-head';
+  hd.innerHTML=`<div class="sec-title-row">
+    <span class="sec-chev${col?'':' open'}">▶</span>
+    <span style="color:var(--acc);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em">${sec.type}</span>
+    <select style="background:transparent;border:none;color:var(--t3);font-size:11px;font-family:inherit;font-weight:700;cursor:pointer;outline:none;-webkit-appearance:none;padding:2px 8px;border-radius:20px" onclick="event.stopPropagation()">
+      ${ST.map(t=>`<option value="${t}"${sec.type===t?' selected':''}>${t}</option>`).join('')}
+    </select>
+  </div>
+  <button class="btn-ico" style="font-size:12px;color:var(--t3)">✕</button>`;
+  hd.querySelector('select').onchange=e=>{const nt=e.target.value;const ld=getDay(client.id);if(!ld)return;udDayR(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,type:nt,isRun:nt==='Corsa',exercises:s.exercises.map(ex=>({...ex,isRun:nt==='Corsa'}))}:s)});};
+  hd.querySelector('button').onclick=e=>{e.stopPropagation();const ld=getDay(client.id);if(!ld||ld.sections.length===1)return;udDayR(client.id,{sections:ld.sections.filter((_,i)=>i!==si)});};
+  hd.onclick=e=>{if(e.target.tagName==='SELECT'||e.target.closest('button'))return;S.collapsed={...S.collapsed,[key]:!col};R();};
+  bl.appendChild(hd);
+  if(!col){
+    const body=document.createElement('div');body.className='sec-body';
+    const hdr=document.createElement('div');hdr.className='sec-col-hdr';
+    hdr.innerHTML=isRun?`<div style="flex:2;padding-left:14px">Sessione</div><div style="flex:1;padding-left:12px">Km</div><div style="flex:1;padding-left:12px">Ritmo</div><div style="flex:1;padding-left:12px">RPE</div><div style="flex:1;padding-left:12px">Note</div><div style="width:42px"></div>`:`<div style="flex:2;padding-left:14px">Esercizio</div><div style="flex:1;padding-left:12px">Serie × Rip.</div><div style="flex:1;padding-left:12px">Recupero</div><div style="flex:1;padding-left:12px">Peso</div><div style="width:42px"></div>`;
+    body.appendChild(hdr);
+    const libSet=libNames();
+    sec.exercises.forEach((ex,ei)=>{
+      const row=document.createElement('div');row.className='ex-row';
+      if(isRun){
+        row.innerHTML=`<div class="ex-name-wrap" style="flex:2"><input class="ex-ni" placeholder="Es. Corsa facile" value="${esc(ex.name)}" data-f="name"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Km</div><input class="ex-ci" value="${esc(ex.km)}" placeholder="10" data-f="km"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Ritmo</div><input class="ex-ci" value="${esc(ex.pace)}" placeholder="5:30/km" data-f="pace"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">RPE</div><input class="ex-ci" value="${esc(ex.rpe)}" placeholder="7" data-f="rpe"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Note</div><input class="ex-ci" value="${esc(ex.weight)}" placeholder="—" data-f="weight"></div>
+          <button class="ex-del">✕</button>`;
+      } else {
+        row.innerHTML=`<div class="ex-name-wrap" style="flex:2"><input class="ex-ni" placeholder="Nome esercizio" value="${esc(ex.name)}" data-f="name"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Serie × Rip.</div><input class="ex-ci" value="${esc(ex.sets)}" placeholder="3×8" data-f="sets"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Recupero</div><input class="ex-ci" value="${esc(ex.rest)}" placeholder='60"' data-f="rest"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Peso</div><input class="ex-ci" value="${esc(ex.weight)}" placeholder="—" data-f="weight"></div>
+          <button class="ex-del">✕</button>`;
+        const ni=row.querySelector('.ex-ni');const nw=row.querySelector('.ex-name-wrap');let acl=null;
+        const showAc=q=>{
+          if(acl){acl.remove();acl=null;}
+          const all=allEx();const matches=all.filter(x=>x.toLowerCase().includes(q.toLowerCase())&&x!==ni.value).slice(0,10);
+          if(!matches.length)return;
+          acl=document.createElement('div');acl.className='ac-list';
+          matches.forEach(m=>{
+            const it=document.createElement('div');it.className='ac-item';
+            const qi=m.toLowerCase().indexOf(q.toLowerCase());
+            const hl=q&&qi>=0?m.slice(0,qi)+`<strong>${m.slice(qi,qi+q.length)}</strong>`+m.slice(qi+q.length):m;
+            const isLib=libSet.has(m);
+            it.innerHTML=`<span style="flex:1">${hl}</span>${isLib?'<span class="ac-lib-badge">Portfolio</span>':''}`;
+            it.onmousedown=e=>{e.preventDefault();ni.value=m;const ld=getDay(client.id);if(ld){udDay(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,exercises:s.exercises.map((x,j)=>j===ei?{...x,name:m}:x)}:s)});}if(acl){acl.remove();acl=null;}};
+            acl.appendChild(it);
+          });
+          nw.appendChild(acl);
+        };
+        ni.addEventListener('input',e=>showAc(e.target.value));
+        ni.addEventListener('focus',e=>{if(e.target.value)showAc(e.target.value)});
+        ni.addEventListener('blur',()=>setTimeout(()=>{
+          if(acl){acl.remove();acl=null;}
+          const name=ni.value.trim();
+          if(name&&!libNames().has(name)){
+            S.library=[...(S.library||[]),{id:uid(),name,category:sec.type}];saveS();
+          }
+        },150));
+      }
+      row.querySelectorAll('[data-f]').forEach(inp=>{inp.addEventListener('input',e=>{const ld=getDay(client.id);if(!ld)return;const ls=ld.sections[si];if(!ls)return;const exs=ls.exercises.map((x,j)=>j===ei?{...x,[inp.dataset.f]:e.target.value}:x);udDay(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,exercises:exs}:s)});clearTimeout(window._ft);window._ft=setTimeout(()=>syncClient(getC(client.id)).catch(()=>{}),800);});});
+      row.querySelector('.ex-del').onclick=()=>{const ld=getDay(client.id);if(!ld)return;const ls=ld.sections[si];if(!ls||ls.exercises.length===1)return;udDayR(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,exercises:ls.exercises.filter((_,j)=>j!==ei)}:s)});};
+      body.appendChild(row);
+    });
+    const ae=document.createElement('button');ae.className='add-ex-btn';ae.textContent='+ '+(isRun?'Sessione':'Esercizio');
+    ae.onclick=()=>{const ld=getDay(client.id);if(!ld)return;const ls=ld.sections[si];if(!ls)return;udDayR(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,exercises:[...ls.exercises,nEx(isRun)]}:s)});};
+    body.appendChild(ae);
+    const ni2=document.createElement('input');ni2.className='sec-notes-inp';ni2.placeholder='Note sezione...';ni2.value=esc(sec.notes||'');
+    ni2.addEventListener('input',e=>{const ld=getDay(client.id);if(!ld)return;udDay(client.id,{sections:ld.sections.map((s,i)=>i===si?{...s,notes:e.target.value}:s)});});
+    body.appendChild(ni2);bl.appendChild(body);
+  }
+  return bl;
+}
+
+function feedbackTab(client){
+  const d=document.createElement('div');const fbs=client.feedback||[];
+  if(fbs.length){
+    const lbl=document.createElement('div');lbl.className='slbl';lbl.textContent='Feedback ricevuti';d.appendChild(lbl);
+    const card=document.createElement('div');card.className='card';card.style.marginBottom='24px';
+    fbs.forEach((fb,fi)=>{
+      const item=document.createElement('div');item.className='fb-item';
+      item.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="color:var(--orange);font-size:15px">${'★'.repeat(fb.stars||0)+'☆'.repeat(5-(fb.stars||0))}</span><span style="font-size:12px;color:var(--t3)">${fb.date||''}${fb.source==='client'?' · dal cliente':''}</span></div>
+        <button class="btn-ico" style="font-size:12px" data-fi="${fi}">✕</button></div>
+      <div style="font-size:14px;line-height:1.6">${fb.text}</div>`;
+      item.querySelector('button').onclick=()=>{const f=[...client.feedback];f.splice(fi,1);upC({feedback:f})};
+      card.appendChild(item);
+    });d.appendChild(card);
+  }
+  const lbl2=document.createElement('div');lbl2.className='slbl';lbl2.textContent='Aggiungi feedback';d.appendChild(lbl2);
+  const card=document.createElement('div');card.className='card';
+  card.innerHTML=`<div style="font-size:13px;color:var(--t2);font-weight:600;margin-bottom:12px">Valutazione settimana</div>
+    <div style="display:flex;gap:4px;margin-bottom:16px">${[1,2,3,4,5].map(n=>`<button class="star-btn" data-s="${n}">☆</button>`).join('')}</div>
+    <div class="field" style="margin-bottom:14px"><label>Note</label><textarea id="fbTxt" placeholder="Osservazioni sulla settimana..."></textarea></div>
+    <button class="btn btn-acc" id="addFb">Aggiungi</button>`;
+  d.appendChild(card);let ss=0;
+  card.querySelectorAll('.star-btn').forEach(b=>{b.onclick=()=>{ss=+b.dataset.s;card.querySelectorAll('.star-btn').forEach((s,i)=>{s.textContent=i<ss?'★':'☆';s.style.color=i<ss?'var(--orange)':'var(--t3)'})}});
+  card.querySelector('#addFb').onclick=()=>{const text=card.querySelector('#fbTxt').value.trim();if(!text)return;upC({feedback:[...(gc()?.feedback||[]),{id:uid(),text,stars:ss,date:new Date().toLocaleDateString('it-IT')}]})};
+  return d;
+}
+
+function summaryPage(){
+  const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;height:100%';
+  d.innerHTML=`<div class="topbar"><div><div class="tb-title">Riepilogo</div><div class="tb-sub">Panoramica di tutti gli atleti</div></div></div>`;
+  const cont=document.createElement('div');cont.className='content';
+  if(!S.clients.length){cont.innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Nessun dato</div></div>`;}
+  else S.clients.forEach(c=>{
+    const idx=ai(c.name);const fn=((c.name||'')+(c.surname?' '+c.surname:'')).trim()||'—';
+    const card=document.createElement('div');card.className='sum-card';
+    card.innerHTML=`<div class="av" style="width:44px;height:44px;font-size:15px;font-weight:800;background:${AVB[idx]};color:${AVT[idx]};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ini(fn)}</div>
+      <div style="flex:1"><div style="font-size:16px;font-weight:700;margin-bottom:2px">${fn}</div><div style="font-size:13px;color:var(--t2)">${SI[c.sport]||''} ${SP[c.sport]||'—'} · ${c.weeks?.length||1} sett · ${c.feedback?.length||0} feedback</div></div>
+      <div style="font-size:13px;color:var(--t3)">${c.numDays||3} gg →</div>`;
+    card.onclick=()=>set({page:'client',activeId:c.id,tab:'programma'});cont.appendChild(card);
+  });
+  d.appendChild(cont);return d;
+}
+
+function portfolioPage(){
+  const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;height:100%';
+  const tb=document.createElement('div');tb.className='topbar';
+  tb.innerHTML=`<div><div class="tb-title">Portfolio</div><div class="tb-sub">Libreria esercizi — appare nei suggerimenti rapidi</div></div>`;
+  d.appendChild(tb);
+  const cont=document.createElement('div');cont.className='content';
+
+  function build(){
+    cont.innerHTML='';
+    const addCard=document.createElement('div');addCard.className='card';addCard.style.marginBottom='20px';
+    addCard.innerHTML=`<div style="font-size:14px;font-weight:700;margin-bottom:12px">Aggiungi esercizio</div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div class="field" style="flex:2;margin:0"><label>Nome esercizio</label><input id="lib-name" placeholder="Es. Squat, Deadlift, Burpee..."></div>
+        <div class="field" style="flex:1;margin:0"><label>Categoria</label><select id="lib-cat">${ST.map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+        <button class="btn btn-acc" id="lib-add" style="flex-shrink:0;margin-bottom:1px">+ Aggiungi</button>
+      </div>`;
+    addCard.querySelector('#lib-add').onclick=()=>{
+      const name=addCard.querySelector('#lib-name').value.trim();const cat=addCard.querySelector('#lib-cat').value;
+      if(!name)return;
+      if((S.library||[]).find(e=>e.name.toLowerCase()===name.toLowerCase()))return;
+      S.library=[...(S.library||[]),{id:uid(),name,category:cat}];saveS();build();
+    };
+    addCard.querySelector('#lib-name').addEventListener('keydown',e=>{if(e.key==='Enter')addCard.querySelector('#lib-add').click()});
+    cont.appendChild(addCard);
+
+    const lib=S.library||[];
+    if(!lib.length){
+      const em=document.createElement('div');em.className='empty';
+      em.innerHTML=`<div class="empty-icon">📖</div><div class="empty-title">Libreria vuota</div><div class="empty-sub">Aggiungi esercizi per vederli nei suggerimenti mentre scrivi le schede</div>`;
+      cont.appendChild(em);return;
+    }
+    const groups={};
+    lib.forEach(e=>{if(!groups[e.category])groups[e.category]=[];groups[e.category].push(e);});
+    const openSt={};
+    function buildAcc(){
+      cont.querySelectorAll('.acc-item').forEach(x=>x.remove());
+      ST.filter(k=>groups[k]).forEach(type=>{
+        const items=groups[type];const isOpen=openSt[type]!==false;
+        const item=document.createElement('div');item.className='acc-item';
+        const hd=document.createElement('div');hd.className='acc-head';
+        hd.innerHTML=`<div style="display:flex;align-items:center"><span class="acc-chev${isOpen?' open':''}">▶</span><span style="font-size:15px;font-weight:600">${type}</span></div><span class="acc-count">${items.length}</span>`;
+        hd.onclick=()=>{openSt[type]=!isOpen;buildAcc()};item.appendChild(hd);
+        if(isOpen){
+          const body=document.createElement('div');body.className='acc-body';
+          items.sort((a,b)=>a.name.localeCompare(b.name)).forEach(ex=>{
+            const r=document.createElement('div');r.className='acc-row';
+            r.innerHTML=`<div style="display:flex;align-items:center;gap:10px"><div class="acc-dot"></div><span>${ex.name}</span></div>`;
+            const del=document.createElement('button');del.className='btn-ico';del.style.fontSize='12px';del.textContent='✕';
+            del.onclick=e=>{e.stopPropagation();S.library=S.library.filter(x=>x.id!==ex.id);saveS();build();};
+            r.appendChild(del);body.appendChild(r);
+          });
+          item.appendChild(body);
+        }
+        cont.appendChild(item);
+      });
+    }
+    buildAcc();
+  }
+  build();d.appendChild(cont);return d;
+}
+
+function cvRoot(shareId){
+  const wrap=document.createElement('div');wrap.className='cv-root';
+  wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:14px;color:var(--t2)">
+    <div style="font-size:28px;font-weight:700;letter-spacing:-.3px">Balza<em style="color:var(--acc);font-style:normal">PT</em></div>
+    <div style="font-size:13px;color:var(--t3)">Caricamento scheda...</div></div>`;
+  Promise.all([getClientSupa(shareId).catch(()=>null),getWts(shareId).catch(()=>({}))]).then(([sc,sw])=>{
+    const lc=S.clients.find(c=>c.shareId===shareId);const client=sc||lc;
+    wrap.innerHTML='';
+    if(!client){
+      wrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:12px;padding:24px;text-align:center">
+        <div style="font-size:28px;font-weight:700;letter-spacing:-.3px;margin-bottom:8px">Balza<em style="color:var(--acc);font-style:normal">PT</em></div>
+        <div style="font-size:40px">🔗</div>
+        <div style="font-size:18px;font-weight:700;color:var(--t1)">Link non valido</div>
+        <div style="font-size:14px;color:var(--t2)">Chiedi al tuo trainer il link aggiornato</div></div>`;
+      return;
+    }
+    buildCV(wrap,client,shareId,sw||{});
+  });
+  return wrap;
+}
+
+function buildCV(wrap,client,shareId,initW){
+  const stK='cv_'+shareId;let st={tab:'scheda',wi:0,di:0};
+  try{const s=sessionStorage.getItem(stK);if(s){const p=JSON.parse(s);Object.assign(st,p);}}catch(e){}
+  const saveSt=()=>sessionStorage.setItem(stK,JSON.stringify(st));
+  const wKey='wt_'+shareId;let weights={...initW};
+  try{const lw=JSON.parse(localStorage.getItem(wKey)||'{}');weights={...weights,...lw};}catch(e){}
+  const saveW=()=>{localStorage.setItem(wKey,JSON.stringify(weights));saveWts(shareId,weights).catch(()=>{})};
+
+  // ── topbar ──────────────────────────────────────────────────────────
+  const topbar=document.createElement('div');topbar.className='cv-topbar';
+  topbar.innerHTML=`<div class="cv-logo">Balza<em>PT</em></div>
+    <div class="cv-sync" id="cvSync"><div class="cv-sync-dot pulse" id="cvSyncDot"></div><span id="cvSyncLbl">Live</span></div>`;
+  wrap.appendChild(topbar);
+
+  // ── scrollable body ─────────────────────────────────────────────────
+  const body=document.createElement('div');body.className='cv-body';wrap.appendChild(body);
+
+  // ── hero ────────────────────────────────────────────────────────────
+  const hero=document.createElement('div');hero.className='cv-hero';
+  const fn=((client.name||'')+(client.surname?' '+client.surname:'')).trim();
+  const idx=ai(client.name);
+  hero.innerHTML=`<div class="cv-athlete-row">
+    <div class="av" style="width:48px;height:48px;font-size:16px;font-weight:800;background:${AVB[idx]};color:${AVT[idx]};border-radius:50%;flex-shrink:0">${ini(fn||'?')}</div>
+    <div>${client.trainer?`<div class="cv-trainer-tag">Trainer: ${client.trainer}</div>`:''}
+    <div class="cv-name">${fn||'La tua scheda'}</div>
+    <div class="cv-meta">${SI[client.sport]||''} ${SP[client.sport]||''} · ${client.numDays||3} giorni/sett</div></div></div>`;
+  const tabsEl=document.createElement('div');tabsEl.className='cv-tabs';
+  ['scheda','feedback'].forEach(t=>{
+    const b=document.createElement('button');b.className='cv-tab'+(st.tab===t?' active':'');
+    b.textContent=t==='scheda'?'Scheda':'Feedback';
+    b.onclick=()=>{st.tab=t;saveSt();rb()};tabsEl.appendChild(b);
+  });
+  hero.appendChild(tabsEl);body.appendChild(hero);
+
+  // ── content area ─────────────────────────────────────────────────────
+  const cont=document.createElement('div');cont.className='cv-content';body.appendChild(cont);
+
+  // ── real-time polling ────────────────────────────────────────────────
+  let lastHash=JSON.stringify(client);
+  const dot=topbar.querySelector('#cvSyncDot');
+  const lbl=topbar.querySelector('#cvSyncLbl');
+  function setSync(state){
+    if(state==='update'){dot.style.background='var(--orange)';dot.classList.remove('pulse');lbl.textContent='Aggiornato!';}
+    else{dot.style.background='var(--acc)';dot.classList.add('pulse');lbl.textContent='Live';}
+  }
+  const poll=setInterval(async()=>{
+    try{
+      const fresh=await getClientSupa(shareId);
+      if(!fresh)return;
+      const newHash=JSON.stringify(fresh);
+      if(newHash!==lastHash){
+        lastHash=newHash;Object.assign(client,fresh);
+        setSync('update');rb();
+        setTimeout(()=>setSync('live'),2500);
+      }
+    }catch(e){/* silent — non mostrare errori di rete al cliente */}
+  },30000);
+  window.addEventListener('pagehide',()=>clearInterval(poll));
+
+  function rb(){
+    cont.innerHTML='';
+    tabsEl.querySelectorAll('.cv-tab').forEach((b,i)=>b.className='cv-tab'+(['scheda','feedback'][i]===st.tab?' active':''));
+    if(st.tab==='scheda')buildSch();else buildFb();
+  }
+
+  function buildSch(){
+    const weeks=client.weeks||[];if(!weeks.length)return;
+    st.wi=Math.min(st.wi,weeks.length-1);
+    const week=weeks[st.wi];
+    st.di=Math.min(st.di,(week.days||[]).length-1);
+
+    // settimane
+    if(weeks.length>1){
+      const wr=document.createElement('div');wr.className='cv-sel-row';
+      weeks.forEach((w,i)=>{const b=document.createElement('button');b.className='cv-sel'+(i===st.wi?' active':'');b.textContent=w.label;b.onclick=()=>{st.wi=i;st.di=0;saveSt();rb()};wr.appendChild(b);});
+      cont.appendChild(wr);
+    }
+    // giorni
+    if(week.days?.length>1){
+      const dr=document.createElement('div');dr.className='cv-sel-row';
+      week.days.forEach((day,i)=>{const b=document.createElement('button');b.className='cv-sel'+(i===st.di?' active':'');b.textContent=day.label+(day.focus?' · '+day.focus:'');b.onclick=()=>{st.di=i;saveSt();rb()};dr.appendChild(b);});
+      cont.appendChild(dr);
+    }
+    const day=week.days[st.di];if(!day)return;
+
+    // titolo giorno
+    const dt=document.createElement('div');dt.className='cv-day-title';
+    dt.textContent=(day.label+(day.focus?' · '+day.focus:'')).toUpperCase();
+    cont.appendChild(dt);
+
+    // sezioni
+    (day.sections||[]).forEach(sec=>{
+      const hasEx=sec.exercises.some(e=>e.name||e.km);if(!hasEx&&!sec.notes)return;
+      const secEl=document.createElement('div');secEl.className='cv-sec';
+      secEl.innerHTML=`<div class="cv-sec-lbl">${sec.type}</div>`;
+      const isRun=sec.type==='Corsa';
+      sec.exercises.filter(e=>e.name||e.km).forEach(ex=>{
+        if(isRun){
+          const r=document.createElement('div');r.className='cv-run';
+          r.innerHTML=`<div class="cv-run-name">${ex.name||'—'}</div>`;
+          const stats=document.createElement('div');stats.className='cv-run-stats';
+          if(ex.km)stats.innerHTML+=`<div class="cv-run-cell"><div class="cv-run-lbl">Km</div><div class="cv-run-val">${ex.km}</div></div>`;
+          if(ex.pace)stats.innerHTML+=`<div class="cv-run-cell"><div class="cv-run-lbl">Ritmo</div><div class="cv-run-val">${ex.pace}</div></div>`;
+          if(ex.rpe)stats.innerHTML+=`<div class="cv-run-cell"><div class="cv-run-lbl">RPE</div><div class="cv-run-val">${ex.rpe}</div></div>`;
+          if(stats.children.length)r.appendChild(stats);
+          secEl.appendChild(r);
+        } else {
+          const wk=week.id+'-'+day.id+'-'+sec.id+'-'+ex.id;
+          const r=document.createElement('div');r.className='cv-ex';
+          const info=[ex.sets,ex.rest].filter(Boolean).join(' · ')||'—';
+          r.innerHTML=`<div class="cv-ex-name">${ex.name||'—'}</div>
+            <div class="cv-ex-bot">
+              <div class="cv-ex-info"><div class="cv-ex-info-lbl">Serie · Rec.</div>${info}</div>
+              <div class="cv-ex-w"><div class="cv-ex-w-lbl">Peso usato</div><input placeholder="es. 60 kg" value="${esc(weights[wk]||'')}" data-wk="${wk}"></div>
+            </div>`;
+          r.querySelector('input').addEventListener('input',e=>{weights[e.target.dataset.wk]=e.target.value;saveW()});
+          secEl.appendChild(r);
+        }
+      });
+      if(sec.notes){const n=document.createElement('div');n.className='cv-sec-note';n.textContent=sec.notes;secEl.appendChild(n)}
+      cont.appendChild(secEl);
+    });
+
+    const sv=document.createElement('button');sv.className='cv-save';sv.textContent='Salva pesi';
+    sv.onclick=()=>{saveW();sv.textContent='✓ Salvato!';setTimeout(()=>sv.textContent='Salva pesi',2000)};
+    cont.appendChild(sv);
+  }
+
+  function buildFb(){
+    const fbK='fb_'+shareId;let cfbs=[];
+    try{cfbs=JSON.parse(localStorage.getItem(fbK)||'[]')}catch(e){}
+    if(cfbs.length){
+      const lbl2=document.createElement('div');lbl2.className='slbl';lbl2.style.marginBottom='10px';lbl2.textContent='I tuoi feedback';cont.appendChild(lbl2);
+      cfbs.slice().reverse().forEach(fb=>{
+        const c=document.createElement('div');c.className='cv-fb-card';
+        c.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="color:var(--orange);font-size:16px">${'★'.repeat(fb.stars||0)+'☆'.repeat(5-(fb.stars||0))}</span>
+          <span style="font-size:12px;color:var(--t3)">${fb.date}</span></div>
+          <div style="font-size:14px;line-height:1.6;color:var(--t1)">${fb.text}</div>`;
+        cont.appendChild(c);
+      });
+      const dv=document.createElement('div');dv.className='divider';cont.appendChild(dv);
+    }
+    const lbl3=document.createElement('div');lbl3.className='slbl';lbl3.style.marginBottom='10px';lbl3.textContent='Lascia un feedback';cont.appendChild(lbl3);
+    const card=document.createElement('div');card.className='cv-fb-card';
+    card.innerHTML=`<div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:14px">Come è andata questa settimana?</div>
+      <div style="display:flex;gap:8px;margin-bottom:18px">${[1,2,3,4,5].map(n=>`<button class="star-btn" data-s="${n}" style="font-size:28px">☆</button>`).join('')}</div>
+      <div class="field" style="margin-bottom:14px"><label>Commento</label><textarea id="cvT" placeholder="Racconta come ti sei sentito, cosa hai trovato difficile..." style="min-height:100px"></textarea></div>
+      <button class="btn btn-acc" id="cvSend" style="width:100%;justify-content:center;padding:14px;font-size:14px">Invia feedback</button>`;
+    cont.appendChild(card);
+    let selS=0;
+    card.querySelectorAll('.star-btn').forEach(b=>{
+      b.onclick=()=>{selS=+b.dataset.s;card.querySelectorAll('.star-btn').forEach((s,i)=>{s.textContent=i<selS?'★':'☆';s.style.color=i<selS?'var(--orange)':'var(--t3)'})};
+    });
+    card.querySelector('#cvSend').onclick=()=>{
+      const text=card.querySelector('#cvT').value.trim();if(!text)return;
+      const entry={id:uid(),text,stars:selS,date:new Date().toLocaleDateString('it-IT')};
+      cfbs.push(entry);localStorage.setItem(fbK,JSON.stringify(cfbs));
+      saveFb(shareId,entry).catch(()=>{});
+      const cl=S.clients.find(c=>c.shareId===shareId);
+      if(cl){cl.feedback=[...(cl.feedback||[]),{...entry,source:'client'}];saveS();syncClient(cl).catch(()=>{});}
+      st.tab='feedback';saveSt();rb();
+    };
+  }
+  rb();
+}
+
+if(navigator.serviceWorker)navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()));
+if(S.clients?.length){S.clients.forEach(c=>syncClient(c).catch(()=>{}));}
+R();
+</script>
+</body>
+</html>
