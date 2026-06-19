@@ -318,6 +318,7 @@ function getRoute(){const h=location.hash;if(h.startsWith('#/c/'))return{type:'c
 window.addEventListener('hashchange',R);
 
 function R(){
+  clearInterval(window._wPoll);
   const route=getRoute();const root=document.getElementById('root');
   const prev=root.querySelector('.content');const sy=prev?.scrollTop||0;
   root.innerHTML='';
@@ -572,7 +573,21 @@ function programmaTab(client){
   day.sections.forEach((sec,si)=>d.appendChild(buildSec(client,week,day,sec,si)));
   const cr=document.createElement('div');cr.className='add-sec-row';
   ST.forEach(type=>{const b=document.createElement('button');b.className='add-sec-chip';b.textContent='+ '+type;b.onclick=()=>{const ld=getDay(client.id);if(!ld)return;udDayR(client.id,{sections:[...ld.sections,nSec(type)]})};cr.appendChild(b);});
-  d.appendChild(cr);return d;
+  d.appendChild(cr);
+
+  // ── pesi cliente in tempo reale ─────────────────────────────────────
+  function applyWeights(w){
+    d.querySelectorAll('[data-cwk]').forEach(el=>{
+      const val=w[el.dataset.cwk];
+      if(val){el.textContent='👤 '+val;el.style.display='block';}
+      else{el.style.display='none';}
+    });
+  }
+  clearInterval(window._wPoll);
+  getWts(client.shareId).then(w=>{if(w)applyWeights(w);});
+  window._wPoll=setInterval(()=>getWts(client.shareId).then(w=>{if(w)applyWeights(w);}),30000);
+
+  return d;
 }
 
 function buildSec(client,week,day,sec,si){
@@ -621,7 +636,7 @@ function buildSec(client,week,day,sec,si){
         row.innerHTML=`<div class="ex-name-wrap" style="flex:2"><input class="ex-ni" placeholder="Nome esercizio" value="${esc(ex.name)}" data-f="name"></div>
           <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Serie × Rip.</div><input class="ex-ci" value="${esc(ex.sets)}" placeholder="3×8" data-f="sets"></div>
           <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Recupero</div><input class="ex-ci" value="${esc(ex.rest)}" placeholder='60"' data-f="rest"></div>
-          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Peso</div><input class="ex-ci" value="${esc(ex.weight)}" placeholder="—" data-f="weight"></div>
+          <div class="ex-div"></div><div class="ex-cell" style="flex:1"><div class="ex-clbl">Peso prescritto</div><input class="ex-ci" value="${esc(ex.weight)}" placeholder="—" data-f="weight"><span class="ex-client-w" data-cwk="${week.id+'-'+day.id+'-'+sec.id+'-'+ex.id}" style="display:none;font-size:10px;font-weight:700;color:var(--acc);margin-top:2px"></span></div>
           <button class="ex-del">✕</button>`;
         const ni=row.querySelector('.ex-ni');const nw=row.querySelector('.ex-name-wrap');let acl=null;
         const showAc=q=>{
