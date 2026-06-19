@@ -296,7 +296,7 @@ if(!c.schede){c.schede=[nScheda(1,c.numDays||3)];c.activeScheda=0;ch=true;}
 });if(ch)localStorage.setItem(SK,JSON.stringify(d));}}}catch(e){}})();
 
 function defS(){return{unlocked:false,pin:'',pinErr:'',page:'clients',clients:[],activeId:null,tab:'profile',collapsed:{},library:[]}}
-function loadS(){try{const s=localStorage.getItem(SK);if(s){const d=JSON.parse(s);return{...defS(),...d,unlocked:false,pin:'',pinErr:'',collapsed:{}}}}catch(e){}return defS();}
+function loadS(){try{const s=localStorage.getItem(SK);if(s){const d=JSON.parse(s);if(d.clients)d.clients.forEach(c=>(c.schede||[]).forEach(sch=>sch.activeDay=0));return{...defS(),...d,unlocked:false,pin:'',pinErr:'',collapsed:{}}}}catch(e){}return defS();}
 function saveS(){try{localStorage.setItem(SK,JSON.stringify({page:S.page,clients:S.clients,activeId:S.activeId,tab:S.tab,library:S.library}))}catch(e){}}
 let S=loadS();
 
