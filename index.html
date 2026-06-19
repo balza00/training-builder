@@ -409,7 +409,6 @@ function clientsPage(){
   } else {
     const sg=document.createElement('div');sg.className='stats-grid';
     sg.innerHTML=`<div class="stat"><div class="stat-val">${S.clients.length}</div><div class="stat-lbl">Clienti attivi</div></div>
-      <div class="stat"><div class="stat-val" style="color:var(--acc)">${S.clients.reduce((a,c)=>a+(c.weeks?.length||0),0)}</div><div class="stat-lbl">Settimane totali</div></div>
       <div class="stat"><div class="stat-val" style="color:var(--green)">${S.clients.reduce((a,c)=>a+(c.feedback?.length||0),0)}</div><div class="stat-lbl">Feedback ricevuti</div></div>`;
     cont.appendChild(sg);
     const card=document.createElement('div');card.className='card';card.style.cssText='padding:0;overflow:hidden';
