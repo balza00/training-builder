@@ -285,10 +285,15 @@ const nEx=r=>({id:uid(),name:'',sets:'',rest:'',weight:'',km:'',pace:'',rpe:'',i
 const nSec=t=>({id:uid(),type:t||'Strength',exercises:[nEx(t==='Corsa')],notes:''});
 const nDay=n=>({id:uid(),label:'Giorno '+n,focus:'',sections:[nSec('Warm Up'),nSec('Core'),nSec('Strength')]});
 const nWk=(n,nd)=>({id:uid(),label:'Sett. '+n,days:Array.from({length:nd||3},(_,i)=>nDay(i+1))});
-const nClient=()=>({id:uid(),shareId:Math.floor(100000+Math.random()*900000).toString(),name:'',surname:'',sport:'functional',trainer:'',notes:'',goals:'',numDays:3,startDate:'',weeks:[nWk(1,3)],feedback:[],activeWeek:0,activeDay:0});
+const nScheda=(n,nd)=>({id:uid(),label:'Scheda '+n,weeks:[nWk(1,nd||3)],activeWeek:0,activeDay:0});
+const nClient=()=>({id:uid(),shareId:Math.floor(100000+Math.random()*900000).toString(),name:'',surname:'',sport:'functional',trainer:'',notes:'',goals:'',numDays:3,startDate:'',schede:[nScheda(1,3)],activeScheda:0,feedback:[]});
 function cloneWk(w){return{...w,id:uid(),label:'',days:w.days.map(d=>({...d,id:uid(),sections:d.sections.map(s=>({...s,id:uid(),exercises:s.exercises.map(e=>({...e,id:uid(),weight:''}))}))}))}}
 
-(function(){try{if(!localStorage.getItem(SK)){const o=localStorage.getItem('tb_v5')||localStorage.getItem('tb_v4')||localStorage.getItem('tb_v3');if(o)localStorage.setItem(SK,o);}const raw=localStorage.getItem(SK);if(raw){const d=JSON.parse(raw);if(d.clients){let ch=false;d.clients.forEach(c=>{if(!c.shareId||c.shareId.length>10){c.shareId=Math.floor(100000+Math.random()*900000).toString();ch=true;}});if(ch)localStorage.setItem(SK,JSON.stringify(d));}}}catch(e){}})();
+(function(){try{if(!localStorage.getItem(SK)){const o=localStorage.getItem('tb_v5')||localStorage.getItem('tb_v4')||localStorage.getItem('tb_v3');if(o)localStorage.setItem(SK,o);}const raw=localStorage.getItem(SK);if(raw){const d=JSON.parse(raw);if(d.clients){let ch=false;d.clients.forEach(c=>{if(!c.shareId||c.shareId.length>10){c.shareId=Math.floor(100000+Math.random()*900000).toString();ch=true;}
+// migra vecchia struttura weeks → schede
+if(!c.schede&&c.weeks){c.schede=[{id:uid(),label:'Scheda 1',weeks:c.weeks,activeWeek:c.activeWeek||0,activeDay:c.activeDay||0}];c.activeScheda=0;delete c.weeks;delete c.activeWeek;delete c.activeDay;ch=true;}
+if(!c.schede){c.schede=[nScheda(1,c.numDays||3)];c.activeScheda=0;ch=true;}
+});if(ch)localStorage.setItem(SK,JSON.stringify(d));}}}catch(e){}})();
 
 function defS(){return{unlocked:false,pin:'',pinErr:'',page:'clients',clients:[],activeId:null,tab:'profile',collapsed:{},library:[]}}
 function loadS(){try{const s=localStorage.getItem(SK);if(s){const d=JSON.parse(s);return{...defS(),...d,unlocked:false,pin:'',pinErr:'',collapsed:{}}}}catch(e){}return defS();}
@@ -297,13 +302,16 @@ let S=loadS();
 
 const gc=()=>S.clients.find(c=>c.id===S.activeId);
 const getC=id=>S.clients.find(c=>c.id===id);
-function getDay(cid){const c=getC(cid);if(!c)return null;return c.weeks[c.activeWeek||0]?.days[c.activeDay||0]||null}
+const getSch=cid=>{const c=getC(cid);if(!c)return null;return c.schede[c.activeScheda||0]||null};
+function getDay(cid){const sch=getSch(cid);if(!sch)return null;return sch.weeks[sch.activeWeek||0]?.days[sch.activeDay||0]||null}
 function set(p){Object.assign(S,p);saveS();R()}
 function upC(p){S.clients=S.clients.map(c=>c.id===S.activeId?{...c,...p}:c);saveS();const c=gc();if(c)syncClient(c).catch(()=>{});R();}
 function upCS(p){S.clients=S.clients.map(c=>c.id===S.activeId?{...c,...p}:c);saveS();const c=gc();if(c)syncClient(c).catch(()=>{});}
-function udDay(cid,patch){const c=getC(cid);if(!c)return;const wi=c.activeWeek||0,di=c.activeDay||0;c.weeks=c.weeks.map((w,i)=>i!==wi?w:{...w,days:w.days.map((d,j)=>j!==di?d:{...d,...patch})});saveS();}
+function upSch(p){const c=gc();if(!c)return;const si=c.activeScheda||0;c.schede=c.schede.map((s,i)=>i===si?{...s,...p}:s);saveS();syncClient(c).catch(()=>{});R();}
+function upSchS(p){const c=gc();if(!c)return;const si=c.activeScheda||0;c.schede=c.schede.map((s,i)=>i===si?{...s,...p}:s);saveS();syncClient(c).catch(()=>{});}
+function udDay(cid,patch){const c=getC(cid);if(!c)return;const si=c.activeScheda||0;const sch=c.schede[si];if(!sch)return;const wi=sch.activeWeek||0,di=sch.activeDay||0;c.schede=c.schede.map((s,i)=>i!==si?s:{...s,weeks:s.weeks.map((w,j)=>j!==wi?w:{...w,days:w.days.map((d,k)=>k!==di?d:{...d,...patch})})});saveS();}
 function udDayR(cid,patch){udDay(cid,patch);const c=getC(cid);if(c)syncClient(c).catch(()=>{});R();}
-const allEx=()=>{const s=new Set();(S.library||[]).forEach(e=>s.add(e.name));S.clients.forEach(c=>(c.weeks||[]).forEach(w=>(w.days||[]).forEach(d=>(d.sections||[]).forEach(sec=>sec.exercises.forEach(e=>{if(e.name?.trim())s.add(e.name.trim())})))));return[...s].sort();};
+const allEx=()=>{const s=new Set();(S.library||[]).forEach(e=>s.add(e.name));S.clients.forEach(c=>(c.schede||[]).forEach(sch=>(sch.weeks||[]).forEach(w=>(w.days||[]).forEach(d=>(d.sections||[]).forEach(sec=>sec.exercises.forEach(e=>{if(e.name?.trim())s.add(e.name.trim())}))))));return[...s].sort();};
 const libNames=()=>new Set((S.library||[]).map(e=>e.name));
 
 function getRoute(){const h=location.hash;if(h.startsWith('#/c/'))return{type:'client',shareId:h.slice(4)};const p=new URLSearchParams(location.search);if(p.get('code'))return{type:'client',shareId:p.get('code')};return{type:'trainer'};}
@@ -470,9 +478,14 @@ function profileTab(client){
   b('f_sd','startDate');b('f_tr','trainer');b('f_sp','sport');b('f_gl','goals');b('f_nt','notes');
   ['f_name','f_surname'].forEach(id=>card.querySelector('#'+id).addEventListener('input',()=>upCS({name:card.querySelector('#f_name').value,surname:card.querySelector('#f_surname').value})));
   card.querySelectorAll('.dp').forEach(btn=>btn.onclick=()=>{
-    const n=+btn.dataset.n;const cl=gc();
-    const weeks=cl.weeks.map(w=>{const ds=[...w.days];while(ds.length<n)ds.push(nDay(ds.length+1));return{...w,days:ds.slice(0,n)}});
-    upC({numDays:n,weeks,activeDay:0});
+    const n=+btn.dataset.n;const cl=gc();if(!cl)return;
+    const si=cl.activeScheda||0;
+    const schede=cl.schede.map((sch,i)=>{
+      if(i!==si)return sch;
+      const weeks=sch.weeks.map(w=>{const ds=[...w.days];while(ds.length<n)ds.push(nDay(ds.length+1));return{...w,days:ds.slice(0,n)}});
+      return{...sch,weeks,activeDay:0};
+    });
+    upC({numDays:n,schede});
   });
   const sc=document.createElement('div');sc.className='card';
   sc.innerHTML=`<div style="font-size:15px;font-weight:700;margin-bottom:4px">Codice cliente</div>
@@ -499,32 +512,57 @@ function profileTab(client){
 
 function programmaTab(client){
   const d=document.createElement('div');
+  const schede=client.schede||[];
+  const activeSch=client.activeScheda||0;
+
+  // ── riga schede ──────────────────────────────────────────────────────
+  const sr=document.createElement('div');sr.className='pill-row';sr.style.borderBottom='1px solid var(--sep)';sr.style.paddingBottom='14px';sr.style.marginBottom='14px';
+  schede.forEach((sch,i)=>{
+    const p=document.createElement('button');p.className='pill'+(activeSch===i?' active':'');
+    if(activeSch===i){
+      const inp=document.createElement('input');inp.value=sch.label;inp.style.cssText='background:transparent;border:none;outline:none;font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;width:'+(Math.max(sch.label.length*8,60))+'px;cursor:text';inp.onclick=e=>e.stopPropagation();
+      inp.addEventListener('input',e=>{inp.style.width=Math.max(e.target.value.length*8,60)+'px';const lc=getC(client.id);if(lc){lc.schede[i].label=e.target.value;saveS();syncClient(lc).catch(()=>{});}});
+      p.appendChild(inp);
+    } else {const s=document.createElement('span');s.textContent=sch.label;p.appendChild(s);}
+    p.onclick=e=>{if(e.target.tagName==='INPUT')return;upC({activeScheda:i})};
+    if(schede.length>1){const dl=document.createElement('button');dl.className='pill-del';dl.textContent='×';dl.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const sc=[...lc.schede];sc.splice(i,1);const ren=sc.map((s,j)=>s.label.match(/^Scheda \d+$/)?{...s,label:'Scheda '+(j+1)}:s);upC({schede:ren,activeScheda:Math.min(lc.activeScheda||0,ren.length-1)});};p.appendChild(dl);}
+    sr.appendChild(p);
+  });
+  const as=document.createElement('button');as.className='pill pill-add';as.textContent='+ Scheda';
+  as.onclick=()=>{const lc=getC(client.id);if(!lc)return;const sc=[...lc.schede,nScheda(lc.schede.length+1,lc.numDays)];upC({schede:sc,activeScheda:sc.length-1})};
+  sr.appendChild(as);d.appendChild(sr);
+
+  const sch=schede[activeSch]||schede[0];
+  if(!sch)return d;
+
+  // ── riga settimane ───────────────────────────────────────────────────
   const wr=document.createElement('div');wr.className='pill-row';
-  (client.weeks||[]).forEach((w,i)=>{
-    const p=document.createElement('button');p.className='pill'+((client.activeWeek||0)===i?' active':'');
-    if((client.activeWeek||0)===i){
+  (sch.weeks||[]).forEach((w,i)=>{
+    const p=document.createElement('button');p.className='pill'+((sch.activeWeek||0)===i?' active':'');
+    if((sch.activeWeek||0)===i){
       const inp=document.createElement('input');inp.value=w.label;inp.style.cssText='background:transparent;border:none;outline:none;font-family:inherit;font-size:inherit;font-weight:inherit;color:inherit;width:'+(Math.max(w.label.length*8,60))+'px;cursor:text';inp.onclick=e=>e.stopPropagation();
-      inp.addEventListener('input',e=>{inp.style.width=Math.max(e.target.value.length*8,60)+'px';const lc=getC(client.id);if(lc){lc.weeks[i].label=e.target.value;saveS();syncClient(lc).catch(()=>{});}});
+      inp.addEventListener('input',e=>{inp.style.width=Math.max(e.target.value.length*8,60)+'px';const lc=getC(client.id);if(lc){lc.schede[activeSch].weeks[i].label=e.target.value;saveS();syncClient(lc).catch(()=>{});}});
       p.appendChild(inp);
     } else {const s=document.createElement('span');s.textContent=w.label;p.appendChild(s);}
-    p.onclick=e=>{if(e.target.tagName==='INPUT')return;upC({activeWeek:i,activeDay:0})};
+    p.onclick=e=>{if(e.target.tagName==='INPUT')return;upSch({activeWeek:i,activeDay:0})};
     const cp=document.createElement('button');cp.className='pill-del';cp.title='Duplica';cp.textContent='⎘';cp.style.fontSize='12px';
-    cp.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const cl=cloneWk(lc.weeks[i]);cl.label='Sett. '+(lc.weeks.length+1);upC({weeks:[...lc.weeks,cl],activeWeek:lc.weeks.length,activeDay:0});};
+    cp.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const cl=cloneWk(lc.schede[activeSch].weeks[i]);cl.label='Sett. '+(lc.schede[activeSch].weeks.length+1);const wks=[...lc.schede[activeSch].weeks,cl];upSch({weeks:wks,activeWeek:wks.length-1,activeDay:0});};
     p.appendChild(cp);
-    if(client.weeks.length>1){const dl=document.createElement('button');dl.className='pill-del';dl.textContent='×';dl.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const wks=[...lc.weeks];wks.splice(i,1);const renumbered=wks.map((w,j)=>w.label.match(/^Sett\. \d+$/)?{...w,label:'Sett. '+(j+1)}:w);upC({weeks:renumbered,activeWeek:Math.min(lc.activeWeek||0,renumbered.length-1)});};p.appendChild(dl);}
+    if(sch.weeks.length>1){const dl=document.createElement('button');dl.className='pill-del';dl.textContent='×';dl.onclick=e=>{e.stopPropagation();const lc=getC(client.id);if(!lc)return;const wks=[...lc.schede[activeSch].weeks];wks.splice(i,1);const ren=wks.map((w,j)=>w.label.match(/^Sett\. \d+$/)?{...w,label:'Sett. '+(j+1)}:w);upSch({weeks:ren,activeWeek:Math.min(lc.schede[activeSch].activeWeek||0,ren.length-1)});};p.appendChild(dl);}
     wr.appendChild(p);
   });
   const aw=document.createElement('button');aw.className='pill pill-add';aw.textContent='+ Settimana';
-  aw.onclick=()=>{const lc=getC(client.id);if(!lc)return;const wks=[...lc.weeks,nWk(lc.weeks.length+1,lc.numDays)];upC({weeks:wks,activeWeek:wks.length-1,activeDay:0})};
+  aw.onclick=()=>{const lc=getC(client.id);if(!lc)return;const wks=[...lc.schede[activeSch].weeks,nWk(lc.schede[activeSch].weeks.length+1,lc.numDays)];upSch({weeks:wks,activeWeek:wks.length-1,activeDay:0})};
   wr.appendChild(aw);d.appendChild(wr);
-  const week=client.weeks[client.activeWeek||0];
+
+  const week=sch.weeks[sch.activeWeek||0];
   const dr=document.createElement('div');dr.className='pill-row';
   (week.days||[]).forEach((day,i)=>{
-    const p=document.createElement('button');p.className='pill'+((client.activeDay||0)===i?' active':'');
-    p.textContent=day.label+(day.focus?' · '+day.focus:'');p.onclick=()=>upC({activeDay:i});dr.appendChild(p);
+    const p=document.createElement('button');p.className='pill'+((sch.activeDay||0)===i?' active':'');
+    p.textContent=day.label+(day.focus?' · '+day.focus:'');p.onclick=()=>upSch({activeDay:i});dr.appendChild(p);
   });
   d.appendChild(dr);
-  const day=week.days[client.activeDay||0];
+  const day=week.days[sch.activeDay||0];
   const dc=document.createElement('div');dc.className='card';dc.style.marginBottom='12px';
   dc.innerHTML=`<div class="form-row"><div class="field" style="margin:0"><label>Nome giorno</label><input id="d_lbl" value="${esc(day.label)}"></div>
     <div class="field" style="margin:0"><label>Focus</label><input id="d_foc" value="${esc(day.focus||'')}" placeholder="es. Lower Body, Hyrox Sim..."></div></div>`;
@@ -830,10 +868,16 @@ function buildCV(wrap,client,shareId,initW){
   }
 
   function buildSch(){
-    const weeks=client.weeks||[];if(!weeks.length)return;
-    st.wi=Math.min(st.wi,weeks.length-1);
+    const schede=client.schede||[];if(!schede.length)return;
+    if(st.sci===undefined)st.sci=0;
+    st.sci=Math.min(st.sci,schede.length-1);
+    const sch=schede[st.sci];
+    const weeks=sch.weeks||[];if(!weeks.length)return;
+    st.wi=Math.min(st.wi||0,weeks.length-1);
     const week=weeks[st.wi];
-    st.di=Math.min(st.di,(week.days||[]).length-1);
+    st.di=Math.min(st.di||0,(week.days||[]).length-1);
+    // selettore schede
+    if(schede.length>1){const sr=document.createElement('div');sr.className='cv-sel-row';schede.forEach((s,i)=>{const b=document.createElement('button');b.className='cv-sel'+(i===st.sci?' active':'');b.textContent=s.label;b.onclick=()=>{st.sci=i;st.wi=0;st.di=0;saveSt();rb()};sr.appendChild(b);});cont.appendChild(sr);}
 
     // settimane
     if(weeks.length>1){
